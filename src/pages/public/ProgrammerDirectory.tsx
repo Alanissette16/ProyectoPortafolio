@@ -95,7 +95,7 @@ const ProgrammerDirectory = () => {
       bgGradient: 'from-[#FFF8E7] to-[#FFF0D4]',
       accentColor: 'amber',
       social: {
-        instagram: 'https://instagram.com/claudia_foreing',
+        instagram: 'https://instagram.com/clc__v',
         linkedin: 'https://linkedin.com/in/claudia-rodriguez',
         github: 'https://github.com/clcmono',
         whatsapp: 'https://wa.me/593999999999'

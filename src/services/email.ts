@@ -6,12 +6,12 @@
 import emailjs from '@emailjs/browser'
 
 // Configuración de EmailJS
-const serviceId = "service_jcoyc8l" // ID del servicio EmailJS
-const templateRequester = "template_shudliq" // Template para notificar al solicitante
-const templateProgrammer = "template_zijzaul" // Template para notificar al programador
-const publicKey = "2hWPAgjtrE7y_w85W" // Public Key de EmailJS
+const serviceId = "service_jcoyc8l"
+const templateRequester = "template_shudliq"
+const templateProgrammer = "template_zijzaul"
+const publicKey = "2hWPAgjtrE7y_w85W"
 
-// Verifica que la configuración esté completa
+// Verifica configuración
 const isConfigured = (templateId?: string) =>
   Boolean(serviceId && publicKey && templateId)
 
@@ -25,7 +25,6 @@ const sendEmail = async (
   params: Record<string, unknown>,
 ) => {
   if (!isConfigured(templateId)) {
-    // Si falta configuración, omite el envío
     return
   }
   try {
@@ -33,7 +32,6 @@ const sendEmail = async (
       publicKey,
     })
   } catch (error) {
-    // Si ocurre un error, lo muestra en consola para depuración
     console.error('Error al enviar correo:', error)
   }
 }
@@ -57,7 +55,6 @@ export const sendProgrammerAdvisoryEmail = async (
   payload: ProgrammerAdvisoryEmailInput,
 ) => {
   if (!payload.programmerEmail) {
-    // Si falta el correo del programador, omite el envío
     return
   }
   await sendEmail(templateProgrammer, {
@@ -90,7 +87,6 @@ export const sendRequesterStatusEmail = async (
   payload: RequesterStatusEmailInput,
 ) => {
   if (!payload.requesterEmail) {
-    // Si falta el correo del solicitante, omite el envío
     return
   }
   await sendEmail(templateRequester, {
