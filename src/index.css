@@ -1,0 +1,157 @@
+/* FOREING - Estilos base con Tailwind + DaisyUI + Tema Femenino */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos base mejorados */
+@layer base {
+  html {
+    @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply antialiased bg-base-100 text-base-content font-body;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Tipografías personalizadas */
+  .font-display {
+    font-family: 'Playfair Display', serif;
+  }
+
+  .font-body {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .font-script {
+    font-family: 'Dancing Script', cursive;
+  }
+
+  /* Scrollbar personalizada femenina */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #fce7f3;
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #f472b6, #c084fc);
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ec4899, #a855f7);
+  }
+
+  /* Selection color */
+  ::selection {
+    background: #f9a8d4;
+    color: #831843;
+  }
+}
+
+/* Utilidades personalizadas */
+@layer utilities {
+  /* Aceleración de hardware para animaciones */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .smooth-transition {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Animación de gradiente */
+  @keyframes gradient {
+    0%, 100% {
+      background-size: 200% 200%;
+      background-position: left center;
+    }
+    50% {
+      background-size: 200% 200%;
+      background-position: right center;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+
+  /* Scrollbar personalizado */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-base-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-base-content/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-base-content/30;
+  }
+
+  /* Text gradient utility */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+
+  /* Glass effect */
+  .glass-effect {
+    @apply bg-base-100/80 backdrop-blur-lg;
+  }
+
+  /* Hover glow effect */
+  .hover-glow {
+    @apply transition-all hover:shadow-lg hover:shadow-primary/20;
+  }
+}
+
+/* Componentes personalizados */
+@layer components {
+  /* Card mejorada */
+  .card-enhanced {
+    @apply card bg-base-100 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl;
+  }
+
+  /* Button con efecto gradient */
+  .btn-gradient {
+    @apply btn bg-gradient-to-r from-primary to-secondary border-none text-white hover:scale-105;
+  }
+
+  /* Badge con animación de pulso */
+  .badge-live {
+    @apply badge badge-primary animate-pulse;
+  }
+}
+
+
+/* Práctica: Fuente y fondo global para UX consistente */
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: inherit;
+}
