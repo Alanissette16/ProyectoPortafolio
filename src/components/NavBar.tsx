@@ -4,30 +4,27 @@
  * Fondo estático (no cambia al hacer scroll)
  */
 
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import clsx from 'clsx'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Briefcase,
+  Calendar,
+  ChevronDown,
+  FileText,
+  Flower2,
+  Heart,
+  Home,
+  LogOut,
+  Menu,
+  Settings,
+  Sparkles,
+  Users,
+  X
+} from 'lucide-react'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import Logo from './Logo'
-import { useState } from 'react'
-import { 
-  Home, 
-  Users, 
-  Briefcase, 
-  LogOut, 
-  Settings, 
-  Sparkles,
-  Menu,
-  X,
-  ChevronDown,
-  Calendar,
-  FileText,
-  Heart,
-  Moon,
-  Sun,
-  Flower2
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import clsx from 'clsx'
 
 const NavBar = () => {
   const { user, role, isAuthenticated, logout } = useAuth()
@@ -88,7 +85,6 @@ const NavBar = () => {
           
           {/* Logo y Marca */}
           <Link to="/" className="flex items-center gap-3 group">
-            <Logo size={48} enableSecretLogin={!isAuthenticated} />
             <div className="flex flex-col">
               <span 
                 className="text-2xl font-display font-bold tracking-wide"

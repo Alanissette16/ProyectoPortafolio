@@ -9,7 +9,6 @@ import logoPremium from '../img/logopremiun.png'
 interface LogoProps {
   className?: string
   size?: number
-  enableSecretLogin?: boolean // Ya no se usa, se mantiene por compatibilidad
 }
 
 const Logo = ({ className = '', size = 40 }: LogoProps) => {
