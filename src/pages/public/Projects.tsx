@@ -3,24 +3,22 @@
  * Diseño elegante con tarjetas modernas y filtros suaves
  */
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Sparkles, 
-  Heart, 
-  ExternalLink, 
-  Github, 
-  Filter,
-  Search,
-  Star,
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ArrowUpRight,
+  Crown,
+  ExternalLink,
   Eye,
   Flower2,
   Gem,
-  Crown,
-  ArrowUpRight,
-  X,
-  Loader2
+  Github,
+  Loader2,
+  Search,
+  Sparkles,
+  Star,
+  X
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { listAllProjects } from '../../services/firestore'
 
 // Interfaz para proyectos
@@ -356,7 +354,7 @@ const Projects = () => {
                         >
                           <Eye size={20} />
                         </button>
-                        {project.liveUrl && (
+                        {project.liveUrl && project.liveUrl !== '#' && (
                           <a 
                             href={project.liveUrl}
                             target="_blank"
@@ -366,7 +364,7 @@ const Projects = () => {
                             <ExternalLink size={20} />
                           </a>
                         )}
-                        {project.githubUrl && (
+                        {project.githubUrl && project.githubUrl !== '#' && (
                           <a 
                             href={project.githubUrl}
                             target="_blank"
@@ -530,30 +528,38 @@ const Projects = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {selectedProject.liveUrl && (
-                    <a
-                      href={selectedProject.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-white font-semibold hover:opacity-90 transition-opacity shadow-lg font-body" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.25)' }}
-                    >
-                      <ExternalLink size={18} />
-                      Ver Sitio Web
-                    </a>
-                  )}
-                  {selectedProject.githubUrl && (
-                    <a
-                      href={selectedProject.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border-2 border-[#D4AF37]/30 text-[#B8860B] font-semibold hover:bg-[#FFF8E7] transition-colors font-body"
-                    >
-                      <Github size={18} />
-                      Ver Código
-                    </a>
-                  )}
-                </div>
+                {(() => {
+                  const isTemplate = (!selectedProject.liveUrl || selectedProject.liveUrl === '#') && (!selectedProject.githubUrl || selectedProject.githubUrl === '#')
+                  
+                  return isTemplate ? (
+                    <p className="text-center text-base-content/60 font-body">Plantilla</p>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      {selectedProject.liveUrl && selectedProject.liveUrl !== '#' && (
+                        <a
+                          href={selectedProject.liveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl text-white font-semibold hover:opacity-90 transition-opacity shadow-lg font-body" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.25)' }}
+                        >
+                          <ExternalLink size={18} />
+                          Ver Sitio Web
+                        </a>
+                      )}
+                      {selectedProject.githubUrl && selectedProject.githubUrl !== '#' && (
+                        <a
+                          href={selectedProject.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border-2 border-[#D4AF37]/30 text-[#B8860B] font-semibold hover:bg-[#FFF8E7] transition-colors font-body"
+                        >
+                          <Github size={18} />
+                          Ver Código
+                        </a>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             </motion.div>
           </motion.div>

@@ -45,7 +45,7 @@ El proyecto FOREING es una aplicación web multiusuario para gestionar portafoli
 ---
 
 ## 5. Roles y Funcionalidades
-Describir claramente lo que hace cada rol:
+Descripción de cada rol y su función:
 
 ### Administrador
 - Gestión de usuarios programadores (crear, editar, eliminar perfiles)
@@ -61,7 +61,7 @@ Describir claramente lo que hace cada rol:
 - Bandeja de asesorías para revisar, aprobar o rechazar solicitudes
 - Envío automático de notificaciones por correo a solicitantes
 
-### Usuario General
+### Usuario externo
 - Exploración pública del directorio de programadores
 - Visualización detallada de portafolios y proyectos individuales
 - Solicitud de asesorías con selección de programador, fecha y hora
@@ -176,12 +176,14 @@ const snapshot = await getDocs(q)
 
 ### Logros del Proyecto
 
-El proyecto logró implementar exitosamente un sistema multiusuario completo con tres roles claramente diferenciados, una arquitectura moderna basada en React y Firebase, y una interfaz responsive que funciona correctamente en dispositivos móviles y de escritorio. Se implementaron todas las funcionalidades requeridas según las especificaciones, incluyendo la integración completa de autenticación, base de datos y sistema de notificaciones por correo electrónico.
+En el proyecto se implementó un sistema multiusuario con tres roles definidos, utilizando React y Firebase. También incluye una interfaz adaptable que funciona bien tanto en teléfonos móviles como en computadoras. Se logró cumplir con la autenticación, el manejo de la base de datos y el envío de notificaciones por correo electrónico con Google.
 
 ### Aprendizajes Obtenidos
 
-Durante el desarrollo se adquirieron conocimientos sólidos en desarrollo full-stack moderno, gestión de estado compleja con React Context, modelado y consultas eficientes en bases de datos NoSQL como Firestore, implementación de autenticación segura mediante OAuth con Google, y diseño de interfaces de usuario responsive y accesibles. Además, se aprendió a integrar servicios externos como EmailJS para funcionalidades de notificación.
+En este proyecto ampliamos y fortalecimos nuestros conocimientos al decidir utilizar React. Al inicio estábamos acostumbradas a trabajar con Angular, pero al usar React notamos que es más sencillo y práctico, ya que sus componentes integran HTML y TypeScript en un solo archivo. A diferencia de Angular, donde cada componente genera varios archivos (como HTML, TS y CSS), en React la estructura es más ligera y fácil de manejar.
+
+Además, al implementar Firebase como base de datos, aprendimos a gestionarlo correctamente. Pudimos registrar usuarios, modificar sus roles, visualizar sus correos y también eliminar o deshabilitar cuentas cuando fue necesario. Finalmente, incorporamos la API de EmailJS, que nos permitió enviar correos electrónicos desde la aplicación web utilizando únicamente JavaScript, de forma rápida y gratuita.
 
 ### Mejoras Futuras
 
-Como posibles mejoras para futuras versiones del sistema, se podrían implementar notificaciones push en tiempo real, un sistema de reseñas y calificaciones para programadores, integración de chat directo para las asesorías, analíticas avanzadas de uso de la plataforma, y exposición de una API REST para integraciones externas con otros sistemas.
+Como posibles mejoras para futuras versiones del sistema, se podrían implementar notificaciones push en tiempo real y un ayudante IA que conteste las dudas de los usuarios.

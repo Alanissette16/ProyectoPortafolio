@@ -149,7 +149,7 @@ const LoginPage = () => {
             className="mb-8"
           >
             <div className="relative">
-              <Logo size={120} enableSecretLogin={true} />
+              {/* <Logo size={120} enableSecretLogin={true} /> */}
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
@@ -243,7 +243,7 @@ const LoginPage = () => {
           >
             {/* Logo móvil */}
             <div className="lg:hidden flex flex-col items-center mb-6">
-              <Logo size={80} enableSecretLogin={true} />
+              {/* <Logo size={80} enableSecretLogin={true} /> */}
               <h1
                 className="text-3xl font-display font-bold mt-4 bg-clip-text text-transparent tracking-[0.14em] uppercase"
                 style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B)' }}

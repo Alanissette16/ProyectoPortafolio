@@ -5,11 +5,10 @@
  * (/admin/*, /panel/*) con guards de autenticación y rol.
  * 
  * @module App
- * @author LEXISWARE - Proyecto Académico PPW
  * @description Layouts: PublicLayout (navbar+footer) y DashboardLayout (sidebar)
  */
 import { Suspense, lazy } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleGuard from './components/RoleGuard'
 
