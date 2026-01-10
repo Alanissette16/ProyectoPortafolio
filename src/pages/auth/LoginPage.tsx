@@ -20,6 +20,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Logo from '../../components/common/Logo'
 import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../services/auth.service'
+import { FormUtils } from '../../utils/FormUtils'
 
 // Imagen de fondo
 import logoPremium from '../../assets/images/logos/logo-premium.png'
@@ -52,18 +53,27 @@ const LoginPage = () => {
     e.preventDefault()
     setError('')
 
-    if (!email || !password) {
-      setError('Por favor completa todos los campos 💖')
-      return
+    // Reglas de validación
+    const loginRules = {
+      email: [FormUtils.required, FormUtils.email],
+      password: [FormUtils.required, (v: string) => FormUtils.minLength(v, 6)]
     }
 
-    if (isRegisterMode && !displayName) {
-      setError('Por favor ingresa tu nombre 💖')
-      return
+    const registerRules = {
+      ...loginRules,
+      displayName: [FormUtils.required]
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres 💖')
+    const formData = { email, password, displayName }
+    const rules = isRegisterMode ? registerRules : loginRules
+
+    // Validar
+    const validationErrors = FormUtils.validateForm(formData, rules)
+
+    if (FormUtils.hasErrors(validationErrors)) {
+      // Priorizar mostrar el primer error encontrado
+      const firstErrorKey = Object.keys(validationErrors)[0]
+      setError(validationErrors[firstErrorKey])
       return
     }
 

@@ -28,6 +28,7 @@ import { useAuth } from '../../context/AuthContext'
 import { addAdvisoryRequest, getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
 import { getPhotoURL } from '../../utils/photoStorage'
 import { isProgrammerAvailableAtSlot } from '../../utils/scheduleUtils'
+import { FormUtils } from '../../utils/FormUtils'
 
 // Imágenes del equipo
 import fotoClaudia from '../../assets/images/team/claudia.jpg'
@@ -85,6 +86,7 @@ const AdvisoryRequest = () => {
     company: '',
     message: ''
   })
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
 
   // Fundadoras (siempre aparecen)
   const founders: Advisor[] = [
@@ -177,6 +179,24 @@ const AdvisoryRequest = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormErrors({})
+
+    // Validaciones
+    const rules = {
+      name: [FormUtils.required],
+      email: [FormUtils.required, FormUtils.email],
+      phone: [FormUtils.required, FormUtils.phone],
+      message: [FormUtils.required]
+    }
+
+    const errors = FormUtils.validateForm(formData, rules)
+    if (FormUtils.hasErrors(errors)) {
+      setFormErrors(errors)
+      // Mostrar alerta general opcionalmente
+      // alert('Por favor completa todos los campos requeridos correctamente.')
+      return
+    }
+
     setLoading(true)
 
     // Validar que el horario esté disponible
@@ -556,8 +576,14 @@ const AdvisoryRequest = () => {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
                     placeholder="Tu nombre"
-                    className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
+                    className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.name
+                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      }`}
                   />
+                  {formErrors.name && (
+                    <p className="text-red-500 text-xs mt-1 ml-2">{formErrors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -571,8 +597,14 @@ const AdvisoryRequest = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                     placeholder="tu@email.com"
-                    className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
+                    className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.email
+                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      }`}
                   />
+                  {formErrors.email && (
+                    <p className="text-red-500 text-xs mt-1 ml-2">{formErrors.email}</p>
+                  )}
                 </div>
 
                 <div>
@@ -584,9 +616,15 @@ const AdvisoryRequest = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+593 55 1234 567"
-                    className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
+                    placeholder="+593 99 1234 567"
+                    className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.phone
+                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      }`}
                   />
+                  {formErrors.phone && (
+                    <p className="text-red-500 text-xs mt-1 ml-2">{formErrors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -615,8 +653,14 @@ const AdvisoryRequest = () => {
                   rows={4}
                   required
                   placeholder="Describe brevemente tu proyecto o las preguntas que tienes..."
-                  className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body resize-none"
+                  className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body resize-none ${formErrors.message
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                    }`}
                 />
+                {formErrors.message && (
+                  <p className="text-red-500 text-xs mt-1 ml-2">{formErrors.message}</p>
+                )}
               </div>
             </div>
 

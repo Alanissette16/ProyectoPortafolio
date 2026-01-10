@@ -22,7 +22,7 @@ export interface FormErrors {
 }
 
 export class FormUtils {
-  
+
   /**
    * Valida si un campo es requerido y está vacío
    */
@@ -103,6 +103,22 @@ export class FormUtils {
   }
 
   /**
+   * Valida número de teléfono
+   */
+  static phone(value: string): string | null {
+    if (!value) return null;
+    // Permite formatos como: +593 99 123 4567, 0991234567, (01) 234-5678
+    const phoneRegex = /^(\+?\d{1,3}[- ]?)?\(?\d{2,3}\)?[- ]?\d{3,4}[- ]?\d{4}$/;
+    // Un regex más permisivo para inputs internacionales variados, pero asegurando números
+    const simplePhoneRegex = /^[+]?[\d\s-]{7,15}$/;
+
+    if (!simplePhoneRegex.test(value.trim())) {
+      return 'Teléfono no válido';
+    }
+    return null;
+  }
+
+  /**
    * Valida patrón personalizado
    */
   static pattern(value: string, pattern: RegExp, message: string): string | null {
@@ -129,14 +145,14 @@ export class FormUtils {
    */
   static validateForm(formData: any, rules: { [key: string]: Array<(val: any) => string | null> }): { [key: string]: string } {
     const errors: { [key: string]: string } = {};
-    
+
     for (const field in rules) {
       const error = FormUtils.validate(formData[field], rules[field]);
       if (error) {
         errors[field] = error;
       }
     }
-    
+
     return errors;
   }
 
