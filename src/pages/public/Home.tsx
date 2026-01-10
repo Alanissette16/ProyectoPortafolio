@@ -225,15 +225,21 @@ const Home = () => {
               </Link>
 
               {canRequestAdvisory && (
-                <Link
-                  to=""
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      alert('Necesitas iniciar sesión para agendar una cita ✨')
+                    } else {
+                      navigate('/agendar-asesoria')
+                    }
+                  }}
                   className="btn btn-ghost btn-lg rounded-full px-8 hover:bg-base-200/50 group"
                 >
                   <span className="text-base-content/80 group-hover:text-primary transition-colors">Agendar Cita</span>
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
                     <ChevronRight size={16} />
                   </div>
-                </Link>
+                </button>
               )}
             </motion.div>
           </div>
