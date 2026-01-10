@@ -7,8 +7,8 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
 import { FiImage } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
-import { storage } from '../../services/firebase'
-import { addProject, listProjectsByOwner, updateProject } from '../../services/firestore'
+import { storage } from '../../services/firebase.config'
+import { addProject, listProjectsByOwner, updateProject } from '../../services/firestore.service'
 
 const emptyProject = {
   title: '',

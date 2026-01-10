@@ -25,13 +25,13 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { addAdvisoryRequest, getScheduleByProgrammer, listProgrammers } from '../../services/firestore'
+import { addAdvisoryRequest, getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
 import { getPhotoURL } from '../../utils/photoStorage'
 import { isProgrammerAvailableAtSlot } from '../../utils/scheduleUtils'
 
 // Imágenes del equipo
-import fotoClaudia from '../../img/FOTOclau.jpg'
-import fotoValeria from '../../img/fotovale.jpg'
+import fotoClaudia from '../../assets/images/team/claudia.jpg'
+import fotoValeria from '../../assets/images/team/valeria.jpg'
 
 // Tipo para asesores
 interface Advisor {
@@ -77,7 +77,7 @@ const AdvisoryRequest = () => {
   const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [availabilityChecked, setAvailabilityChecked] = useState(false)
   const [isSlotAvailable, setIsSlotAvailable] = useState(true)
-  
+
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -113,7 +113,7 @@ const AdvisoryRequest = () => {
     const loadAdvisors = async () => {
       try {
         const programmers = await listProgrammers()
-        
+
         // Gradientes para variar colores
         const gradients = [
           { gradient: 'from-[#9B59B6] to-[#8E44AD]', bgGradient: 'from-[#F5EEF8] to-[#EBDEF0]' },
@@ -189,7 +189,7 @@ const AdvisoryRequest = () => {
     try {
       // Encontrar el asesor seleccionado para obtener su info
       const selectedAdvisorData = advisors.find(a => a.id === selectedAdvisor)
-      
+
       await addAdvisoryRequest({
         programmerId: selectedAdvisor,
         programmerName: selectedAdvisorData?.name || '',
@@ -229,18 +229,18 @@ const AdvisoryRequest = () => {
           >
             <CheckCircle className="text-white" size={40} />
           </motion.div>
-          
+
           <h2 className="text-3xl font-display font-bold text-base-content mb-4">
             ¡Solicitud Enviada! 💖
           </h2>
-          
+
           <p className="text-base-content/60 font-body mb-8">
             Hemos recibido tu solicitud de asesoría. Te contactaremos pronto para confirmar tu cita con{' '}
             <span className="font-semibold text-[#D4AF37]">
               {advisors.find(a => a.id === selectedAdvisor)?.name}
             </span>.
           </p>
-          
+
           <div className="p-4 rounded-2xl mb-6" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}>
             <div className="flex items-center justify-center gap-4 text-sm text-base-content/70 font-body">
               <div className="flex items-center gap-2">
@@ -253,7 +253,7 @@ const AdvisoryRequest = () => {
               </div>
             </div>
           </div>
-          
+
           <a
             href="/"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-semibold hover:opacity-90 transition-opacity font-body" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}
@@ -261,6 +261,92 @@ const AdvisoryRequest = () => {
             Volver al Inicio
             <ArrowRight size={18} />
           </a>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // Mostrar splash de login si no está autenticado
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#FFFAF6] pt-24 pb-20 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-lg w-full mx-4 p-10 bg-white rounded-3xl shadow-2xl border text-center"
+          style={{ boxShadow: '0 25px 50px -12px rgba(212, 175, 55, 0.1)', borderColor: 'rgba(212, 175, 55, 0.2)' }}
+        >
+          {/* Icon */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', bounce: 0.5 }}
+            className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
+            style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}
+          >
+            <Heart className="text-white" size={40} />
+          </motion.div>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-display font-bold text-base-content mb-4"
+          >
+            ¡Hola! 👋
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-base-content/70 font-body mb-8 leading-relaxed"
+          >
+            Para solicitar una asesoría necesitas{' '}
+            <span className="font-semibold text-[#D4AF37]">iniciar sesión</span>.
+            <br />
+            Es rápido, seguro y gratuito ✨
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-4"
+          >
+            <a
+              href="/login"
+              className="block w-full px-8 py-4 rounded-full text-white font-semibold hover:opacity-90 transition-all shadow-lg font-body"
+              style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <Sparkles size={20} />
+                Iniciar Sesión
+                <ArrowRight size={20} />
+              </span>
+            </a>
+
+            <a
+              href="/"
+              className="block w-full px-8 py-3 rounded-full text-[#5D4E37] font-medium hover:bg-[#FFF8E7] transition-all font-body border border-[#D4AF37]/20"
+            >
+              Volver al Inicio
+            </a>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 p-4 rounded-2xl"
+            style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
+          >
+            <p className="text-sm text-[#5D4E37] font-body">
+              <strong>¿Por qué necesito cuenta?</strong>
+              <br />
+              Para darte seguimiento personalizado y mantener un historial de tus asesorías
+            </p>
+          </motion.div>
         </motion.div>
       </div>
     )
@@ -325,18 +411,17 @@ const AdvisoryRequest = () => {
                 <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>1</span>
                 ¿En qué podemos ayudarte?
               </h3>
-              
+
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {serviceTypes.map((service) => (
                   <button
                     key={service.id}
                     type="button"
                     onClick={() => setSelectedService(service.id)}
-                    className={`p-5 rounded-2xl border-2 text-left transition-all duration-300 ${
-                      selectedService === service.id
-                        ? 'border-[#D4AF37] shadow-lg' 
-                        : 'border-[#D4AF37]/20 hover:border-[#D4AF37]/40 hover:bg-[#FFF8E7]/50'
-                    }`}
+                    className={`p-5 rounded-2xl border-2 text-left transition-all duration-300 ${selectedService === service.id
+                      ? 'border-[#D4AF37] shadow-lg'
+                      : 'border-[#D4AF37]/20 hover:border-[#D4AF37]/40 hover:bg-[#FFF8E7]/50'
+                      }`}
                     style={selectedService === service.id ? { background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.1)' } : {}}
                   >
                     <service.icon className={`mb-3 ${selectedService === service.id ? 'text-[#D4AF37]' : 'text-base-content/40'}`} size={24} />
@@ -352,41 +437,40 @@ const AdvisoryRequest = () => {
                 <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>2</span>
                 ¿Con quién te gustaría hablar?
               </h3>
-              
+
               {loadingAdvisors ? (
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
                   <span className="ml-3 text-base-content/60 font-body">Cargando asesores...</span>
                 </div>
               ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {advisors.map((advisor) => (
-                  <button
-                    key={advisor.id}
-                    type="button"
-                    onClick={() => setSelectedAdvisor(advisor.id)}
-className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
-                      selectedAdvisor === advisor.id
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {advisors.map((advisor) => (
+                    <button
+                      key={advisor.id}
+                      type="button"
+                      onClick={() => setSelectedAdvisor(advisor.id)}
+                      className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${selectedAdvisor === advisor.id
                         ? 'border-[#D4AF37] shadow-lg'
                         : 'border-[#D4AF37]/20 hover:border-[#D4AF37]/40 hover:bg-[#FFF8E7]/50'
-                    }`}
-                    style={selectedAdvisor === advisor.id ? { background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.1)' } : {}}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`relative w-16 h-16 rounded-2xl overflow-hidden border-2 ${selectedAdvisor === advisor.id ? 'border-[#D4AF37]' : 'border-white'} shadow-lg`}>
-                        <img src={advisor.image} alt={advisor.name} className="w-full h-full object-cover" />
+                        }`}
+                      style={selectedAdvisor === advisor.id ? { background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.1)' } : {}}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`relative w-16 h-16 rounded-2xl overflow-hidden border-2 ${selectedAdvisor === advisor.id ? 'border-[#D4AF37]' : 'border-white'} shadow-lg`}>
+                          <img src={advisor.image} alt={advisor.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <p className="font-display font-bold text-lg text-base-content">{advisor.name}</p>
+                          <p className={`text-sm font-body ${selectedAdvisor === advisor.id ? 'text-[#D4AF37]' : 'text-base-content/50'}`}>
+                            {advisor.role}
+                          </p>
+                          <p className="text-xs text-base-content/40 font-body mt-1">{advisor.specialty}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-display font-bold text-lg text-base-content">{advisor.name}</p>
-                        <p className={`text-sm font-body ${selectedAdvisor === advisor.id ? 'text-[#D4AF37]' : 'text-base-content/50'}`}>
-                          {advisor.role}
-                        </p>
-                        <p className="text-xs text-base-content/40 font-body mt-1">{advisor.specialty}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -396,7 +480,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                 <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>3</span>
                 Selecciona fecha y hora
               </h3>
-              
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
@@ -412,7 +496,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                     className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
                     <Clock size={14} className="text-[#B8860B]" />
@@ -424,18 +508,17 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                         key={time}
                         type="button"
                         onClick={() => setSelectedTime(time)}
-                        className={`py-2 rounded-xl text-xs font-medium transition-all font-body ${
-                          selectedTime === time
-                            ? 'text-white'
-                            : 'bg-[#FFF8E7] text-base-content/60 hover:bg-[#FFF0D4]'
-                        }`}
+                        className={`py-2 rounded-xl text-xs font-medium transition-all font-body ${selectedTime === time
+                          ? 'text-white'
+                          : 'bg-[#FFF8E7] text-base-content/60 hover:bg-[#FFF0D4]'
+                          }`}
                         style={selectedTime === time ? { background: 'linear-gradient(to right, #D4AF37, #B8860B)' } : {}}
                       >
                         {formatTimeForDisplay(time)}
                       </button>
                     ))}
                   </div>
-                  
+
                   {/* Advertencia de disponibilidad */}
                   {availabilityChecked && selectedAdvisor && selectedDate && selectedTime && !isSlotAvailable && (
                     <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200">
@@ -460,7 +543,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                 <span className="flex items-center justify-center w-8 h-8 rounded-full text-white text-sm font-bold" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>4</span>
                 Tus datos de contacto
               </h3>
-              
+
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
@@ -476,7 +559,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                     className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
                     <Mail size={14} className="text-[#B8860B]" />
@@ -491,7 +574,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                     className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
                     <Phone size={14} className="text-[#D4AF37]" />
@@ -505,7 +588,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                     className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
                     <Flower2 size={14} className="text-[#B8860B]" />
@@ -520,7 +603,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                   />
                 </div>
               </div>
-              
+
               <div className="mt-6">
                 <label className="text-sm font-medium text-base-content/70 font-body flex items-center gap-2 mb-2">
                   <MessageSquare size={14} className="text-[#D4AF37]" />
@@ -543,7 +626,7 @@ className={`p-6 rounded-2xl border-2 text-left transition-all duration-300 ${
                 <Heart size={14} className="text-[#D4AF37] fill-[#D4AF37]" />
                 La consulta es gratuita y sin compromiso
               </p>
-              
+
               <button
                 type="submit"
                 disabled={loading || !selectedService || !selectedAdvisor || !selectedDate || !selectedTime || (availabilityChecked && !isSlotAvailable)}

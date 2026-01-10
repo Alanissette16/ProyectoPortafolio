@@ -7,13 +7,16 @@
  * @module App
  * @description Layouts: PublicLayout (navbar+footer) y DashboardLayout (sidebar)
  */
-import { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import ProtectedRoute from './components/ProtectedRoute'
-import RoleGuard from './components/RoleGuard'
+// Importaciones de React y Router
+import { Suspense, lazy } from 'react'  // lazy: carga páginas solo cuando se necesitan (optimización)
+import { Navigate, Route, Routes } from 'react-router-dom'  // Sistema de navegación
+import ProtectedRoute from './components/guards/ProtectedRoute'  // Protege rutas que requieren login
+import RoleGuard from './components/guards/RoleGuard'  // Protege rutas por rol (admin/programmer)
+import ScrollToTop from './components/common/ScrollToTop'  // Vuelve arriba al cambiar de página
 
-const PublicLayout = lazy(() => import('./layouts/PublicLayout'))
-const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))
+// Layouts (plantillas de página)
+const PublicLayout = lazy(() => import('./layouts/PublicLayout'))  // Layout con NavBar y Footer
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))  // Layout de panel de control
 const Home = lazy(() => import('./pages/public/Home'))
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'))
 const Projects = lazy(() => import('./pages/public/Projects'))
@@ -30,6 +33,7 @@ const ProgrammerDashboard = lazy(
 )
 const ProgrammersPage = lazy(() => import('./pages/admin/ProgrammersPage'))
 const ScheduleManager = lazy(() => import('./pages/admin/ScheduleManager'))
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'))
 const PortfolioEditor = lazy(
   () => import('./pages/programmer/PortfolioEditor'),
 )
@@ -47,57 +51,61 @@ const RouteFallback = () => (
 
 function App() {
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
-        {/* Practica: Rutas publicas con layout publico */}
-        <Route element={<PublicLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/proyectos" element={<Projects />} />
-          <Route path="/portafolio/:id" element={<PortfolioPublic />} />
-          <Route path="/programadores" element={<ProgrammerDirectory />} />
-          <Route path="/agendar-asesoria" element={<AdvisoryRequest />} />
-          <Route path="/mis-solicitudes" element={<MyAdvisoryRequests />} />
-          <Route path="/login" element={<LoginPage />} />
-        </Route>
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          {/* Rutas públicas (con NavBar y Footer) - Todos pueden acceder */}
+          <Route element={<PublicLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/proyectos" element={<Projects />} />
+            <Route path="/portafolio/:id" element={<PortfolioPublic />} />
+            <Route path="/programadores" element={<ProgrammerDirectory />} />
+            <Route path="/agendar-asesoria" element={<AdvisoryRequest />} />
+            <Route path="/mis-solicitudes" element={<MyAdvisoryRequests />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
 
-        {/* Practica: Rutas protegidas + guard de rol */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <RoleGuard allowedRoles={['admin']}>
-                <DashboardLayout role="admin" />
-              </RoleGuard>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="programadores" element={<ProgrammersPage />} />
-          <Route path="proyectos" element={<ProjectsAdmin />} />
-          <Route path="horarios" element={<ScheduleManager />} />
-        </Route>
+          {/* Rutas de administrador - Solo usuarios con role='admin' */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <RoleGuard allowedRoles={['admin']}>
+                  <DashboardLayout role="admin" />
+                </RoleGuard>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="programadores" element={<ProgrammersPage />} />
+            <Route path="proyectos" element={<ProjectsAdmin />} />
+            <Route path="horarios" element={<ScheduleManager />} />
+            <Route path="usuarios" element={<UserManagement />} />
+          </Route>
 
-        <Route
-          path="/panel"
-          element={
-            <ProtectedRoute>
-              <RoleGuard allowedRoles={['programmer']}>
-                <DashboardLayout role="programmer" />
-              </RoleGuard>
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ProgrammerDashboard />} />
-          <Route path="perfil" element={<ProfileEditor />} />
-          <Route path="portafolio" element={<PortfolioEditor />} />
-          <Route path="proyectos" element={<ProjectsPage />} />
-          <Route path="asesorias" element={<AdvisoryInbox />} />
-        </Route>
+          <Route
+            path="/panel"
+            element={
+              <ProtectedRoute>
+                <RoleGuard allowedRoles={['programmer']}>
+                  <DashboardLayout role="programmer" />
+                </RoleGuard>
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<ProgrammerDashboard />} />
+            <Route path="perfil" element={<ProfileEditor />} />
+            <Route path="portafolio" element={<PortfolioEditor />} />
+            <Route path="proyectos" element={<ProjectsPage />} />
+            <Route path="asesorias" element={<AdvisoryInbox />} />
+          </Route>
 
-        {/* Redireccion fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          {/* Si la URL no existe, redirige a la página principal */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </>
   )
 }
 

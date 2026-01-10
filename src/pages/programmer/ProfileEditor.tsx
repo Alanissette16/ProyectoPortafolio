@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { Briefcase, Camera, Clock, Github, Instagram, Linkedin, MapPin, Phone, Plus, Quote, Save, Sparkles, Users, X } from 'lucide-react'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db, storage } from '../../services/firebase'
+import { db, storage } from '../../services/firebase.config'
 
 const initialForm = {
   displayName: '',

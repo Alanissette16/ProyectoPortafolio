@@ -19,7 +19,7 @@ import {
   X
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { listAllProjects } from '../../services/firestore'
+import { listAllProjects } from '../../services/firestore.service'
 
 // Interfaz para proyectos
 interface ProjectType {
@@ -150,12 +150,12 @@ const Projects = () => {
     const loadProjects = async () => {
       try {
         const firestoreProjects = await listAllProjects()
-        
+
         // Convertir proyectos de Firestore al formato esperado
         const convertedProjects: ProjectType[] = firestoreProjects.map((proj: any, index: number) => {
           // Obtener imagen de localStorage si existe
           const localImage = localStorage.getItem(`project_img_${proj.id}`)
-          
+
           // Determinar categoría formateada
           let category = proj.category || 'Web Design'
           if (category === 'academico') category = 'academico'
@@ -202,7 +202,7 @@ const Projects = () => {
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -213,20 +213,20 @@ const Projects = () => {
   }, [activeCategory, searchTerm, projects])
 
   const colorClasses: Record<string, { gradient: string, bg: string, text: string }> = {
-    pink: { gradient: 'from-[#D4AF37] to-[#B8860B]', bg: 'bg-[#FFF8E7]', text: 'text-[#D4AF37]' },
-    purple: { gradient: 'from-[#D4A574] to-[#D4AF37]', bg: 'bg-[#FFFAF0]', text: 'text-[#B8860B]' },
-    rose: { gradient: 'from-[#B8860B] to-[#D4AF37]', bg: 'bg-[#FFF5E6]', text: 'text-[#D4AF37]' },
-    amber: { gradient: 'from-[#D4AF37] to-[#D4A574]', bg: 'bg-[#FFF8E7]', text: 'text-[#B8860B]' },
-    emerald: { gradient: 'from-[#D4A574] to-[#B8860B]', bg: 'bg-[#FFFAF0]', text: 'text-[#D4AF37]' },
-    cyan: { gradient: 'from-[#D4AF37] to-[#D4A574]', bg: 'bg-[#FFF5E6]', text: 'text-[#B8860B]' },
+    pink: { gradient: 'from-primary to-accent', bg: 'bg-primary/5', text: 'text-primary' },
+    purple: { gradient: 'from-secondary to-accent', bg: 'bg-secondary/5', text: 'text-secondary' },
+    rose: { gradient: 'from-accent to-secondary', bg: 'bg-accent/5', text: 'text-accent' },
+    amber: { gradient: 'from-primary to-secondary', bg: 'bg-primary/5', text: 'text-primary' },
+    emerald: { gradient: 'from-secondary to-primary', bg: 'bg-secondary/5', text: 'text-secondary' },
+    cyan: { gradient: 'from-accent to-primary', bg: 'bg-accent/5', text: 'text-accent' },
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFCF9] pt-24 pb-20">
+    <div className="min-h-screen bg-base-100 pt-24 pb-20">
       {/* Fondo Rosa Dorado Minimalista */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-[#FFEDE3]/40 to-transparent" />
-        <div className="absolute bottom-0 right-0 w-1/2 h-48 bg-gradient-to-tl from-[#FFE4D4]/30 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-48 bg-gradient-to-tl from-secondary/5 to-transparent" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -235,10 +235,10 @@ const Projects = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border mb-6" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)', borderColor: 'rgba(212, 175, 55, 0.3)' }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-primary/20 bg-base-200 mb-6"
           >
-            <Gem className="text-[#D4AF37]" size={18} />
-            <span className="font-medium bg-clip-text text-transparent font-body" style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>
+            <Gem className="text-primary" size={18} />
+            <span className="font-medium bg-clip-text text-transparent font-body bg-gradient-to-r from-primary to-secondary">
               Nuestro Trabajo
             </span>
           </motion.div>
@@ -250,7 +250,7 @@ const Projects = () => {
             className="text-5xl sm:text-6xl font-display font-bold mb-6"
           >
             <span className="text-base-content">Proyectos </span>
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B, #D4A574)' }}>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent">
               Destacados
             </span>
           </motion.h1>
@@ -272,15 +272,14 @@ const Projects = () => {
           transition={{ delay: 0.3 }}
           className="mb-12"
         >
-          {/* Search Bar */}
           <div className="relative max-w-md mx-auto mb-8">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={20} />
             <input
               type="text"
               placeholder="Buscar proyectos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body shadow-lg shadow-[#D4AF37]/5"
+              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-base-100 border-2 border-primary/20 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all font-body shadow-lg shadow-primary/5 text-base-content"
             />
           </div>
 
@@ -290,12 +289,10 @@ const Projects = () => {
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-5 py-2.5 rounded-full font-medium transition-all duration-300 font-body ${
-                  activeCategory === category
-                    ? 'text-white shadow-lg'
-                    : 'bg-white border border-[#D4AF37]/20 text-base-content/70 hover:border-[#D4AF37]/40 hover:bg-[#FFF8E7]'
-                }`}
-                style={activeCategory === category ? { background: 'linear-gradient(to right, #D4AF37, #B8860B)', boxShadow: '0 10px 15px -3px rgba(212, 175, 55, 0.3)' } : {}}
+                className={`px-5 py-2.5 rounded-full font-medium transition-all duration-300 font-body ${activeCategory === category
+                  ? 'text-primary-content bg-gradient-to-r from-primary to-secondary shadow-lg'
+                  : 'bg-base-100 border border-primary/20 text-base-content/70 hover:border-primary/40 hover:bg-base-200'
+                  }`}
               >
                 {category}
               </button>
@@ -313,117 +310,117 @@ const Projects = () => {
 
         {/* Projects Grid */}
         {!loading && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project, index) => {
-              const colors = colorClasses[project.color] || colorClasses.pink
-              
-              return (
-                <motion.div
-                  key={project.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group"
-                >
-                  <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl shadow-[#D4AF37]/5 border border-[#D4AF37]/20 hover:shadow-2xl hover:shadow-[#D4AF37]/10 transition-all duration-500">
-                    {/* Featured Badge */}
-                    {project.featured && (
-                      <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-lg" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>
-                        <Star size={12} className="fill-current" />
-                        Destacado
-                      </div>
-                    )}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence mode="popLayout">
+              {filteredProjects.map((project, index) => {
+                const colors = colorClasses[project.color] || colorClasses.pink
 
-                    {/* Image */}
-                    <div className="relative h-56 overflow-hidden">
-                      <img 
-                        src={project.image} 
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-base-content/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
-                      {/* Hover Actions */}
-                      <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                return (
+                  <motion.div
+                    key={project.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group"
+                  >
+                    <div className="relative bg-base-100 rounded-3xl overflow-hidden shadow-xl shadow-base-content/5 border border-base-content/10 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
+                      {/* Featured Badge */}
+                      {project.featured && (
+                        <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-lg bg-gradient-to-r from-primary to-secondary">
+                          <Star size={12} className="fill-current" />
+                          Destacado
+                        </div>
+                      )}
+
+                      {/* Image */}
+                      <div className="relative h-56 overflow-hidden">
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-base-content/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                        {/* Hover Actions */}
+                        <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => setSelectedProject(project)}
+                            className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-primary hover:bg-base-100 transition-colors shadow-lg"
+                          >
+                            <Eye size={20} />
+                          </button>
+                          {project.liveUrl && project.liveUrl !== '#' && (
+                            <a
+                              href={project.liveUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-secondary hover:bg-base-100 transition-colors shadow-lg"
+                            >
+                              <ExternalLink size={20} />
+                            </a>
+                          )}
+                          {project.githubUrl && project.githubUrl !== '#' && (
+                            <a
+                              href={project.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-base-content/70 hover:bg-base-100 transition-colors shadow-lg"
+                            >
+                              <Github size={20} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-6">
+                        {/* Category */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} font-body`}>
+                            {project.category}
+                          </span>
+                          <span className="text-xs text-base-content/40 font-body">{project.year}</span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-xl font-display font-bold text-base-content mb-2 group-hover:text-primary transition-colors">
+                          {project.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-base-content/60 font-body text-sm mb-4 line-clamp-2">
+                          {project.description}
+                        </p>
+
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {project.tags.slice(0, 3).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-1 rounded-lg text-xs text-base-content/60 font-body" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* View More */}
                         <button
                           onClick={() => setSelectedProject(project)}
-                          className="p-3 rounded-xl bg-white/90 backdrop-blur-sm text-[#D4AF37] hover:bg-white transition-colors shadow-lg"
+                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r ${colors.gradient} text-white font-semibold hover:opacity-90 transition-opacity font-body`}
                         >
-                          <Eye size={20} />
+                          Ver Detalles
+                          <ArrowUpRight size={18} />
                         </button>
-                        {project.liveUrl && project.liveUrl !== '#' && (
-                          <a 
-                            href={project.liveUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-3 rounded-xl bg-white/90 backdrop-blur-sm text-[#B8860B] hover:bg-white transition-colors shadow-lg"
-                          >
-                            <ExternalLink size={20} />
-                          </a>
-                        )}
-                        {project.githubUrl && project.githubUrl !== '#' && (
-                          <a 
-                            href={project.githubUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-3 rounded-xl bg-white/90 backdrop-blur-sm text-base-content/70 hover:bg-white transition-colors shadow-lg"
-                          >
-                            <Github size={20} />
-                          </a>
-                        )}
                       </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="p-6">
-                      {/* Category */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} font-body`}>
-                          {project.category}
-                        </span>
-                        <span className="text-xs text-base-content/40 font-body">{project.year}</span>
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-xl font-display font-bold text-base-content mb-2 group-hover:text-[#D4AF37] transition-colors">
-                        {project.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-base-content/60 font-body text-sm mb-4 line-clamp-2">
-                        {project.description}
-                      </p>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.tags.slice(0, 3).map((tag) => (
-                          <span 
-                            key={tag}
-                            className="px-2 py-1 rounded-lg text-xs text-base-content/60 font-body" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* View More */}
-                      <button
-                        onClick={() => setSelectedProject(project)}
-                        className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r ${colors.gradient} text-white font-semibold hover:opacity-90 transition-opacity font-body`}
-                      >
-                        Ver Detalles
-                        <ArrowUpRight size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </AnimatePresence>
-        </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          </div>
         )}
 
         {/* Empty State */}
@@ -433,13 +430,13 @@ const Projects = () => {
             animate={{ opacity: 1 }}
             className="text-center py-20"
           >
-            <Flower2 className="mx-auto text-[#D4AF37]" size={48} />
+            <Flower2 className="mx-auto text-primary" size={48} />
             <p className="text-xl text-base-content/60 font-body">
               No se encontraron proyectos con esos criterios ✨
             </p>
             <button
               onClick={() => { setActiveCategory('Todos'); setSearchTerm(''); }}
-              className="mt-4 text-[#D4AF37] font-semibold hover:text-[#B8860B] font-body"
+              className="mt-4 text-primary font-semibold hover:text-primary-focus font-body"
             >
               Ver todos los proyectos
             </button>
@@ -462,25 +459,25 @@ const Projects = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl"
+              className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-base-100 rounded-3xl shadow-2xl"
             >
               {/* Close Button */}
               <button
                 onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm text-base-content/60 hover:text-[#D4AF37] transition-colors shadow-lg"
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-base-100/80 backdrop-blur-sm text-base-content/60 hover:text-primary transition-colors shadow-lg"
               >
                 <X size={24} />
               </button>
 
               {/* Image */}
               <div className="relative h-72 sm:h-80">
-                <img 
-                  src={selectedProject.image} 
+                <img
+                  src={selectedProject.image}
                   alt={selectedProject.title}
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-base-content/60 to-transparent" />
-                
+
                 {/* Title overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                   <div className="flex items-center gap-3 mb-2">
@@ -517,7 +514,7 @@ const Projects = () => {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedProject.tags.map((tag) => (
-                      <span 
+                      <span
                         key={tag}
                         className="px-4 py-2 rounded-xl text-sm text-[#B8860B] font-medium font-body" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
                       >
@@ -530,7 +527,7 @@ const Projects = () => {
                 {/* Actions */}
                 {(() => {
                   const isTemplate = (!selectedProject.liveUrl || selectedProject.liveUrl === '#') && (!selectedProject.githubUrl || selectedProject.githubUrl === '#')
-                  
+
                   return isTemplate ? (
                     <p className="text-center text-base-content/60 font-body">Plantilla</p>
                   ) : (

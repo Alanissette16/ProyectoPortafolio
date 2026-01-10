@@ -1,12 +1,3 @@
-/**
- * Servicio de Firestore para CRUD de usuarios, portafolios, proyectos y asesorías.
- * 
- * Este módulo centraliza todas las operaciones de base de datos con Firestore,
- * implementando separación de responsabilidades y buenas prácticas.
- * 
- * @module services/firestore
- * @description Maneja las colecciones: users, portfolios, projects, schedules, advisories
- */
 import {
   addDoc,
   collection,
@@ -21,12 +12,16 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
-import { Role } from './auth'
+import { AdvisoryRequestInput } from '../models/Advisory'
+import { Portfolio } from '../models/Portfolio'
+import { Project } from '../models/Project'
+import { ScheduleSlot } from '../models/Schedule'
+import { ProgrammerProfile, UserRole } from '../models/User'
 import {
   sendProgrammerAdvisoryEmail,
   sendRequesterStatusEmail,
-} from './email'
-import { db } from './firebase'
+} from './email.service'
+import { db } from './firebase.config'
 
 export const collections = {
   users: 'users',
@@ -36,64 +31,39 @@ export const collections = {
   advisories: 'advisories',
 } as const
 
-export interface ProgrammerProfile {
-  displayName: string
-  lastName?: string
-  email: string
-  specialty?: string
-  bio?: string
-  quote?: string
-  location?: string
-  role: Role
-  photoURL?: string
-  skills?: string[]
-  socials?: {
-    github?: string
-    instagram?: string
-    whatsapp?: string
-  }
-  stats?: {
-    projects: number
-    experience: string
-    clients: number
-  }
+// Interfaces eliminadas y reemplazadas por imports de ../models
+
+// ==========================================
+// GESTIÓN DE USUARIOS (Admin)
+// ==========================================
+
+/**
+ * Obtiene todos los usuarios del sistema (admin, programmer, external).
+ */
+export const listAllUsers = async () => {
+  const snap = await getDocs(collection(db, collections.users))
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) }))
 }
 
-export interface Portfolio {
-  headline: string
-  about?: string
-  skills?: string[]
-  tags?: string[]
-  theme?: string
+/**
+ * Actualiza el rol de un usuario.
+ * @param uid ID del usuario
+ * @param newRole Nuevo rol a asignar
+ */
+export const updateUserRole = async (uid: string, newRole: UserRole) => {
+  await updateDoc(doc(db, collections.users, uid), {
+    role: newRole,
+    updatedAt: serverTimestamp(),
+  })
 }
 
-export interface Project {
-  title: string
-  description?: string
-  category: 'academico' | 'laboral'
-  role: 'frontend' | 'backend' | 'fullstack' | 'db'
-  techStack?: string[]
-  repoUrl?: string
-  demoUrl?: string
+export const deleteUser = async (uid: string) => {
+  await deleteDoc(doc(db, collections.users, uid))
 }
 
-export interface AdvisoryRequestInput {
-  programmerId: string
-  programmerEmail?: string
-  programmerName?: string
-  requesterName: string
-  requesterEmail: string
-  slot: { date: string; time: string }
-  note?: string
-  userId?: string | null
-}
-
-export interface ScheduleSlot {
-  day: string
-  from: string
-  to: string
-  available: boolean
-}
+// ==========================================
+// GESTIÓN DE PROGRAMADORES
+// ==========================================
 
 const resolveProgrammerContact = async (
   programmerId: string,
@@ -117,6 +87,13 @@ const resolveProgrammerContact = async (
   }
 }
 
+// Re-exports para mantener compatibilidad con componentes existentes
+export type { AdvisoryRequestInput } from '../models/Advisory'
+export type { Portfolio } from '../models/Portfolio'
+export type { Project } from '../models/Project'
+export type { ScheduleSlot } from '../models/Schedule'
+export type { ProgrammerProfile } from '../models/User'
+
 /**
  * Guarda o actualiza el perfil de un programador en Firestore.
  * 
@@ -126,10 +103,11 @@ const resolveProgrammerContact = async (
  * @example
  * await upsertProgrammer('prog_123', { displayName: 'Juan', role: 'programmer' });
  */
-export const upsertProgrammer = async (uid: string, data: ProgrammerProfile) => {
+export const upsertProgrammer = async (uid: string, data: Omit<ProgrammerProfile, 'uid'>) => {
   try {
+    const payload = { ...data, uid } as ProgrammerProfile // Aseguramos que se guarde con uid si es necesario o firestore lo ignora al ser docId
     await setDoc(doc(db, collections.users, uid), {
-      ...data,
+      ...payload,
       updatedAt: serverTimestamp(),
     })
   } catch (error) {
@@ -183,15 +161,18 @@ export const listProjectsByOwner = async (ownerId: string) => {
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) }))
 }
 
-export const addProject = async (ownerId: string, data: Project) => {
+export const addProject = async (ownerId: string, data: Omit<Project, 'id'>) => {
+  // Aseguramos que data no incluya id si viene del form, firestore lo genera
+  const { ...projectData } = data as any
   const docRef = await addDoc(collection(db, collections.projects), {
-    ...data,
+    ...projectData,
     ownerId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   })
   return docRef
 }
+
 
 export const updateProject = async (projectId: string, data: Partial<Project>) =>
   updateDoc(doc(db, collections.projects, projectId), {
@@ -210,14 +191,13 @@ export const listAllProjects = async () => {
 
 // Asesorias
 export const addAdvisoryRequest = async (data: AdvisoryRequestInput) => {
-  console.log('📝 Guardando asesoría...', data)
-  
   const contact = await resolveProgrammerContact(data.programmerId, {
     programmerEmail: data.programmerEmail,
     programmerName: data.programmerName,
   })
 
-  const payload = {
+  // Usamos as any para compatibilidad flexible con el modelo estricto
+  const payload: any = {
     ...data,
     programmerEmail: contact.programmerEmail,
     programmerName: contact.programmerName,
@@ -226,11 +206,7 @@ export const addAdvisoryRequest = async (data: AdvisoryRequestInput) => {
     updatedAt: serverTimestamp(),
   }
 
-  console.log('📦 Payload a guardar:', payload)
-  
   const docRef = await addDoc(collection(db, collections.advisories), payload)
-  
-  console.log('✅ Asesoría guardada con ID:', docRef.id)
 
   try {
     await sendProgrammerAdvisoryEmail({
@@ -256,9 +232,6 @@ export const listAllAdvisories = async () => {
 }
 
 export const listAdvisoriesByProgrammer = async (programmerId: string, programmerEmail?: string) => {
-  // Lista de IDs de fundadoras hardcodeadas
-  const foundersIds = ['claudia', 'valentina', 'valeria']
-  
   // Buscar por programmerId (uid del usuario)
   const qById = query(
     collection(db, collections.advisories),
@@ -279,7 +252,6 @@ export const listAdvisoriesByProgrammer = async (programmerId: string, programme
   }
 
   // También buscar si el email coincide con una fundadora
-  // Por ejemplo: si el usuario tiene email claudia@foreing.tech, también buscar por programmerId = 'claudia'
   let byFounder: { id: string }[] = []
   if (programmerEmail) {
     // Mapeo de emails a IDs de fundadoras
@@ -288,7 +260,7 @@ export const listAdvisoriesByProgrammer = async (programmerId: string, programme
       'valentina@foreing.tech': 'valentina',
       'valeria@foreing.tech': 'valeria',
     }
-    
+
     const founderId = emailToFounder[programmerEmail.toLowerCase()]
     if (founderId) {
       const qByFounder = query(
@@ -311,7 +283,7 @@ export const listAdvisoriesByProgrammer = async (programmerId: string, programme
   }
   addIfNew(byEmail)
   addIfNew(byFounder)
-  
+
   return combined
 }
 

@@ -23,8 +23,8 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 
 const NavBar = () => {
   const { user, role, isAuthenticated, logout } = useAuth()
@@ -82,21 +82,21 @@ const NavBar = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          
+
           {/* Logo y Marca */}
           <Link to="/" className="flex items-center gap-3 group">
             <div className="flex flex-col">
-              <span 
+              <span
                 className="text-2xl font-display font-bold tracking-wide"
-                style={{ 
-                  background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent' 
+                style={{
+                  background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
                 }}
               >
                 FOREING
               </span>
-              <span 
+              <span
                 className="text-[10px] font-medium tracking-[0.2em] uppercase font-body"
                 style={{ color: '#6D5D8A' }}
               >
@@ -117,11 +117,11 @@ const NavBar = () => {
                     ? 'text-white shadow-lg'
                     : 'hover:bg-[#F3EEFF]'
                 )}
-                style={isActive(link.to) 
-                  ? { 
-                      background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', 
-                      boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)' 
-                    }
+                style={isActive(link.to)
+                  ? {
+                    background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                    boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)'
+                  }
                   : { color: '#4C4160' }
                 }
               >
@@ -129,35 +129,37 @@ const NavBar = () => {
                 {link.label}
               </Link>
             ))}
-            
-            {isAuthenticated && role === 'external' && (
+
+            {/* Opción de Agendar - visible para usuarios autenticados que NO son staff */}
+            {isAuthenticated && role !== 'admin' && role !== 'programmer' && (
               <div className="relative group">
-                <button 
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full font-medium hover:bg-[#F3EEFF] transition-all font-body" 
+                <button
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full font-medium hover:bg-[#F3EEFF] transition-all font-body"
                   style={{ color: '#4C4160' }}
                 >
                   <Calendar size={18} />
                   Agendar
                   <ChevronDown size={16} className="group-hover:rotate-180 transition-transform" />
                 </button>
-                <div 
+
+                <div
                   className="absolute top-full left-0 mt-2 w-52 py-3 bg-white rounded-2xl shadow-xl border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all"
-                  style={{ 
-                    borderColor: 'rgba(139, 92, 246, 0.2)', 
-                    boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)' 
+                  style={{
+                    borderColor: 'rgba(139, 92, 246, 0.2)',
+                    boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)'
                   }}
                 >
-                  <Link 
-                    to="/agendar-asesoria" 
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#F3EEFF] transition-colors font-body" 
+                  <Link
+                    to="/agendar-asesoria"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#F3EEFF] transition-colors font-body"
                     style={{ color: '#4C4160' }}
                   >
                     <Calendar size={16} style={{ color: '#8B5CF6' }} />
                     Agendar Cita
                   </Link>
-                  <Link 
-                    to="/mis-solicitudes" 
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#F3EEFF] transition-colors font-body" 
+                  <Link
+                    to="/mis-solicitudes"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#F3EEFF] transition-colors font-body"
                     style={{ color: '#4C4160' }}
                   >
                     <FileText size={16} style={{ color: '#8B5CF6' }} />
@@ -177,13 +179,13 @@ const NavBar = () => {
                 className="p-3 rounded-full transition-all duration-300 group hover:scale-105"
                 style={{ background: 'linear-gradient(135deg, #F3EEFF, #E9DEFF)' }}
               >
-                <ThemeIcon 
-                  size={20} 
-                  style={{ color: '#8B5CF6' }} 
-                  className="group-hover:rotate-12 transition-transform" 
+                <ThemeIcon
+                  size={20}
+                  style={{ color: '#8B5CF6' }}
+                  className="group-hover:rotate-12 transition-transform"
                 />
               </button>
-              
+
               <AnimatePresence>
                 {themeDropdownOpen && (
                   <motion.div
@@ -191,9 +193,9 @@ const NavBar = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute right-0 top-full mt-2 w-48 py-2 bg-white rounded-2xl shadow-xl border"
-                    style={{ 
-                      borderColor: 'rgba(139, 92, 246, 0.2)', 
-                      boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)' 
+                    style={{
+                      borderColor: 'rgba(139, 92, 246, 0.2)',
+                      boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)'
                     }}
                   >
                     {(['rosegold', 'lavender', 'rosepink'] as const).map((t) => {
@@ -204,21 +206,21 @@ const NavBar = () => {
                           onClick={() => { changeTheme(t); setThemeDropdownOpen(false); }}
                           className={clsx(
                             'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors font-body',
-                            theme === t 
-                              ? 'text-[#6D5D8A]' 
+                            theme === t
+                              ? 'text-[#6D5D8A]'
                               : 'hover:bg-[#F3EEFF] text-[#4C4160]'
                           )}
-                          style={theme === t 
-                            ? { background: 'linear-gradient(to right, #F3EEFF, #E9DEFF)' } 
+                          style={theme === t
+                            ? { background: 'linear-gradient(to right, #F3EEFF, #E9DEFF)' }
                             : {}}
                         >
                           <Icon size={16} style={{ color: '#8B5CF6' }} />
                           {themeLabels[t]}
                           {theme === t && (
-                            <Heart 
-                              size={12} 
-                              className="ml-auto" 
-                              style={{ color: '#8B5CF6', fill: '#8B5CF6' }} 
+                            <Heart
+                              size={12}
+                              className="ml-auto"
+                              style={{ color: '#8B5CF6', fill: '#8B5CF6' }}
                             />
                           )}
                         </button>
@@ -244,13 +246,13 @@ const NavBar = () => {
                     style={{ boxShadow: '0 0 0 2px #8B5CF6' }}
                     onError={(e) => { e.currentTarget.src = '/default-avatar.svg' }}
                   />
-                  <ChevronDown 
-                    size={16} 
-                    className={clsx('transition-transform', userDropdownOpen && 'rotate-180')} 
-                    style={{ color: '#8B5CF6' }} 
+                  <ChevronDown
+                    size={16}
+                    className={clsx('transition-transform', userDropdownOpen && 'rotate-180')}
+                    style={{ color: '#8B5CF6' }}
                   />
                 </button>
-                
+
                 <AnimatePresence>
                   {userDropdownOpen && (
                     <motion.div
@@ -258,13 +260,13 @@ const NavBar = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       className="absolute right-0 top-full mt-2 w-60 py-2 bg-white rounded-2xl shadow-xl border"
-                      style={{ 
-                        borderColor: 'rgba(139, 92, 246, 0.2)', 
-                        boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)' 
+                      style={{
+                        borderColor: 'rgba(139, 92, 246, 0.2)',
+                        boxShadow: '0 10px 40px rgba(139, 92, 246, 0.15)'
                       }}
                     >
-                      <div 
-                        className="px-4 py-3 border-b" 
+                      <div
+                        className="px-4 py-3 border-b"
                         style={{ borderColor: 'rgba(139, 92, 246, 0.15)' }}
                       >
                         <p className="font-semibold truncate font-body" style={{ color: '#3D3D3D' }}>
@@ -274,7 +276,7 @@ const NavBar = () => {
                           {user.email}
                         </p>
                       </div>
-                      
+
                       {role === 'admin' && (
                         <Link
                           to="/admin"
@@ -286,7 +288,7 @@ const NavBar = () => {
                           Panel Admin
                         </Link>
                       )}
-                      
+
                       {role === 'programmer' && (
                         <Link
                           to="/panel"
@@ -298,7 +300,7 @@ const NavBar = () => {
                           Mi Dashboard
                         </Link>
                       )}
-                      
+
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-400 hover:text-red-500 transition-colors font-body"
@@ -336,9 +338,9 @@ const NavBar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="lg:hidden backdrop-blur-xl border-t"
-            style={{ 
-              backgroundColor: 'rgba(250, 245, 255, 0.98)', 
-              borderColor: 'rgba(139, 92, 246, 0.15)' 
+            style={{
+              backgroundColor: 'rgba(250, 245, 255, 0.98)',
+              borderColor: 'rgba(139, 92, 246, 0.15)'
             }}
           >
             <div className="px-4 py-6 space-y-2">
@@ -353,7 +355,7 @@ const NavBar = () => {
                       ? 'text-white'
                       : 'hover:bg-[#F3EEFF]'
                   )}
-                  style={isActive(link.to) 
+                  style={isActive(link.to)
                     ? { background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }
                     : { color: '#4C4160' }
                   }
@@ -362,16 +364,18 @@ const NavBar = () => {
                   {link.label}
                 </Link>
               ))}
-              
-              {isAuthenticated && role === 'external' && (
+
+              {/* Opción de Agendar - visible para usuarios autenticados que NO son staff */}
+              {isAuthenticated && role !== 'admin' && role !== 'programmer' && (
                 <>
-                  <div 
-                    className="pt-2 pb-1 px-4 text-xs font-semibold uppercase tracking-wider flex items-center gap-2" 
+                  <div
+                    className="pt-2 pb-1 px-4 text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
                     style={{ color: '#8B5CF6' }}
                   >
                     <Sparkles size={12} />
                     Asesorías
                   </div>
+
                   <Link
                     to="/agendar-asesoria"
                     onClick={() => setMobileMenuOpen(false)}
@@ -394,12 +398,12 @@ const NavBar = () => {
               )}
 
               {/* Theme buttons mobile */}
-              <div 
-                className="pt-4 border-t" 
+              <div
+                className="pt-4 border-t"
                 style={{ borderColor: 'rgba(139, 92, 246, 0.15)' }}
               >
-                <p 
-                  className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2" 
+                <p
+                  className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
                   style={{ color: '#8B5CF6' }}
                 >
                   <Heart size={12} style={{ fill: '#8B5CF6' }} />
@@ -414,16 +418,16 @@ const NavBar = () => {
                         onClick={() => changeTheme(t)}
                         className={clsx(
                           'flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-medium capitalize transition-all font-body',
-                          theme === t 
-                            ? 'text-white' 
+                          theme === t
+                            ? 'text-white'
                             : 'hover:bg-[#E9DEFF]'
                         )}
-                        style={theme === t 
+                        style={theme === t
                           ? { background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)' }
-                          : { 
-                              background: 'linear-gradient(135deg, #F3EEFF, #E9DEFF)', 
-                              color: '#4C4160' 
-                            }
+                          : {
+                            background: 'linear-gradient(135deg, #F3EEFF, #E9DEFF)',
+                            color: '#4C4160'
+                          }
                         }
                       >
                         <Icon size={16} />
@@ -432,7 +436,7 @@ const NavBar = () => {
                   })}
                 </div>
               </div>
-              
+
               {isAuthenticated && user && (
                 <div className="pt-4 border-t border-[#8B5CF6]/20 space-y-2">
                   <div className="flex items-center gap-3 px-4 py-2">
@@ -443,8 +447,8 @@ const NavBar = () => {
                       onError={(e) => { e.currentTarget.src = '/default-avatar.svg' }}
                     />
                     <div>
-                      <p 
-                        className="font-semibold text-sm font-body" 
+                      <p
+                        className="font-semibold text-sm font-body"
                         style={{ color: '#3D3D3D' }}
                       >
                         {user.displayName}
@@ -454,7 +458,7 @@ const NavBar = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {role === 'admin' && (
                     <Link
                       to="/admin"
@@ -465,7 +469,7 @@ const NavBar = () => {
                       Panel Admin
                     </Link>
                   )}
-                  
+
                   {role === 'programmer' && (
                     <Link
                       to="/panel"
@@ -476,7 +480,7 @@ const NavBar = () => {
                       Mi Dashboard
                     </Link>
                   )}
-                  
+
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-400 hover:bg-red-50 transition-all"

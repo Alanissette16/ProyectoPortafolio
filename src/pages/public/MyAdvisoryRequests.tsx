@@ -1,13 +1,13 @@
 /**
  * Bandeja de solicitudes de asesoría para usuarios externos.
- * Permite ver el estado de las solicitudes y crear nuevas.
+ * SEGURO: Requiere autenticación y solo muestra las solicitudes del usuario logueado.
  */
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore'
-import { db } from '../../services/firebase'
-import { addAdvisoryRequest, listProgrammers } from '../../services/firestore'
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { db } from '../../services/firebase.config'
+import { addAdvisoryRequest, listProgrammers } from '../../services/firestore.service'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 const initialForm = {
   programmerId: '',
@@ -19,10 +19,11 @@ const initialForm = {
 }
 
 const MyAdvisoryRequests = () => {
-  const [email, setEmail] = useState('')
-  const [searchPerformed, setSearchPerformed] = useState(false)
+  const { user, isAuthenticated, role } = useAuth()
+  const navigate = useNavigate()
+
   const [requests, setRequests] = useState<(DocumentData & { id: string })[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showNewRequestForm, setShowNewRequestForm] = useState(false)
   const [form, setForm] = useState(initialForm)
@@ -30,39 +31,58 @@ const MyAdvisoryRequests = () => {
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Redirigir si no está autenticado o no es usuario external
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    if (role !== 'external') {
+      navigate('/')
+      return
+    }
+  }, [isAuthenticated, role, navigate])
+
+  // Cargar programadores
   useEffect(() => {
     listProgrammers().then(setProgrammers)
   }, [])
 
-  const searchRequests = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!email.trim()) {
-      setError('Ingresa tu correo electrónico.')
-      return
+  // Cargar solicitudes automáticamente del usuario autenticado
+  useEffect(() => {
+    const loadUserRequests = async () => {
+      if (!user?.email) return
+
+      setLoading(true)
+      setError('')
+
+      try {
+        const q = query(
+          collection(db, 'advisories'),
+          where('requesterEmail', '==', user.email)
+        )
+        const snapshot = await getDocs(q)
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        setRequests(data)
+
+        // Pre-llenar el formulario con los datos del usuario
+        setForm(prev => ({
+          ...prev,
+          requesterEmail: user.email || '',
+          requesterName: user.displayName || ''
+        }))
+      } catch (err) {
+        console.error('Error al cargar solicitudes:', err)
+        setError('No se pudieron cargar las solicitudes. Intenta nuevamente.')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setLoading(true)
-    setError('')
-    setSearchPerformed(true)
-    
-    try {
-      const q = query(
-        collection(db, 'advisories'),
-        where('requesterEmail', '==', email.trim())
-      )
-      const snapshot = await getDocs(q)
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setRequests(data)
-      
-      // Pre-llenar el formulario con el email
-      setForm(prev => ({ ...prev, requesterEmail: email.trim() }))
-    } catch (err) {
-      console.error('Error al buscar solicitudes:', err)
-      setError('No se pudieron cargar las solicitudes. Intenta nuevamente.')
-    } finally {
-      setLoading(false)
+    if (isAuthenticated && user && role === 'external') {
+      loadUserRequests()
     }
-  }
+  }, [user, isAuthenticated, role])
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -92,13 +112,25 @@ const MyAdvisoryRequests = () => {
         slot: { date: form.date, time: form.time },
         note: form.note,
       })
-      
+
       setMessage('Solicitud enviada exitosamente. Te avisaremos por correo cuando el programador responda.')
-      setForm({ ...initialForm, requesterEmail: email })
+      setForm({
+        ...initialForm,
+        requesterEmail: user?.email || '',
+        requesterName: user?.displayName || ''
+      })
       setShowNewRequestForm(false)
-      
+
       // Recargar solicitudes
-      await searchRequests(e as any)
+      if (user?.email) {
+        const q = query(
+          collection(db, 'advisories'),
+          where('requesterEmail', '==', user.email)
+        )
+        const snapshot = await getDocs(q)
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        setRequests(data)
+      }
     } catch (err) {
       console.error('Error al enviar solicitud:', err)
       setError('No se pudo enviar la solicitud. Intenta nuevamente.')
@@ -126,266 +158,249 @@ const MyAdvisoryRequests = () => {
     return programmer?.displayName || 'Programador'
   }
 
+  // Mostrar loading mientras se autentica o carga
+  if (loading && !user) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 flex items-center justify-center min-h-[400px]">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Mis Solicitudes de Asesoría</h1>
         <p className="text-base-content/70">
-          Consulta el estado de tus solicitudes ingresando tu correo electrónico.
+          Aquí puedes ver el estado de todas tus solicitudes.
         </p>
-      </div>
-
-      {/* Formulario de búsqueda */}
-      <div className="card bg-base-100 shadow-lg">
-        <div className="card-body">
-          <form onSubmit={searchRequests} className="flex gap-4">
-            <div className="form-control flex-1">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu-correo@ejemplo.com"
-                className="input input-bordered"
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? 'Buscando...' : 'Buscar Solicitudes'}
-            </button>
-          </form>
-        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
       {message && <div className="alert alert-success">{message}</div>}
 
       {/* Resultados */}
-      {searchPerformed && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">
-              {requests.length === 0 ? 'No se encontraron solicitudes' : `${requests.length} solicitud(es) encontrada(s)`}
-            </h2>
-            {requests.length > 0 && !showNewRequestForm && (
-              <button 
-                className="btn btn-primary btn-sm"
-                onClick={() => setShowNewRequestForm(true)}
-              >
-                + Nueva Solicitud
-              </button>
-            )}
-          </div>
-
-          {/* Formulario de nueva solicitud */}
-          {showNewRequestForm && (
-            <div className="card bg-base-100 shadow-lg border-2 border-primary">
-              <div className="card-body">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Nueva Solicitud</h3>
-                  <button 
-                    className="btn btn-ghost btn-sm"
-                    onClick={() => setShowNewRequestForm(false)}
-                  >
-                    ✕
-                  </button>
-                </div>
-                
-                <form onSubmit={handleSubmitNewRequest} className="space-y-4">
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Programador *</span>
-                    </label>
-                    <select
-                      name="programmerId"
-                      value={form.programmerId}
-                      onChange={handleFormChange}
-                      className="select select-bordered"
-                      required
-                    >
-                      <option value="">Selecciona un programador</option>
-                      {programmers.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.displayName} · {p.specialty}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="form-control">
-                      <label className="label">
-                        <span className="label-text">Tu nombre *</span>
-                      </label>
-                      <input
-                        name="requesterName"
-                        value={form.requesterName}
-                        onChange={handleFormChange}
-                        className="input input-bordered"
-                        placeholder="Tu nombre"
-                        required
-                      />
-                    </div>
-                    <div className="form-control">
-                      <label className="label">
-                        <span className="label-text">Correo *</span>
-                      </label>
-                      <input
-                        type="email"
-                        name="requesterEmail"
-                        value={form.requesterEmail}
-                        onChange={handleFormChange}
-                        className="input input-bordered"
-                        placeholder="correo@ejemplo.com"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="form-control">
-                      <label className="label">
-                        <span className="label-text">Fecha *</span>
-                      </label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={form.date}
-                        onChange={handleFormChange}
-                        className="input input-bordered"
-                        required
-                      />
-                    </div>
-                    <div className="form-control">
-                      <label className="label">
-                        <span className="label-text">Hora *</span>
-                      </label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={form.time}
-                        onChange={handleFormChange}
-                        className="input input-bordered"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-control">
-                    <label className="label">
-                      <span className="label-text">Motivo / nota</span>
-                    </label>
-                    <textarea
-                      name="note"
-                      value={form.note}
-                      onChange={handleFormChange}
-                      className="textarea textarea-bordered"
-                      rows={3}
-                      placeholder="Describe brevemente el motivo de tu solicitud..."
-                    />
-                  </div>
-
-                  <div className="card-actions justify-end">
-                    <button 
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => setShowNewRequestForm(false)}
-                    >
-                      Cancelar
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary"
-                      disabled={submitting}
-                    >
-                      {submitting ? 'Enviando...' : 'Enviar Solicitud'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Lista de solicitudes */}
-          {requests.length > 0 ? (
-            <div className="space-y-3">
-              {requests
-                .sort((a, b) => {
-                  const dateA = a.createdAt?.toMillis?.() || 0
-                  const dateB = b.createdAt?.toMillis?.() || 0
-                  return dateB - dateA
-                })
-                .map((request) => (
-                  <div key={request.id} className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-                    <div className="card-body">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">
-                            Asesoría con {getProgrammerName(request.programmerId)}
-                          </h3>
-                          <p className="text-sm text-base-content/60">
-                            {request.requesterName}
-                          </p>
-                        </div>
-                        {getStatusBadge(request.status)}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 mt-2">
-                        <div>
-                          <span className="text-xs text-base-content/60">Fecha:</span>
-                          <p className="font-medium">{request.slot?.date}</p>
-                        </div>
-                        <div>
-                          <span className="text-xs text-base-content/60">Hora:</span>
-                          <p className="font-medium">{request.slot?.time}</p>
-                        </div>
-                      </div>
-
-                      {request.note && (
-                        <div className="mt-2">
-                          <span className="text-xs text-base-content/60">Tu nota:</span>
-                          <p className="text-sm">{request.note}</p>
-                        </div>
-                      )}
-
-                      {request.responseMessage && (
-                        <div className={`alert ${request.status === 'aprobada' ? 'alert-success' : 'alert-error'} mt-3`}>
-                          <div>
-                            <span className="font-semibold">Respuesta del programador:</span>
-                            <p>{request.responseMessage}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="text-xs text-base-content/50 mt-2">
-                        Solicitada: {request.createdAt?.toDate?.().toLocaleDateString('es-ES') || 'Fecha no disponible'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          ) : searchPerformed && !loading && (
-            <div className="card bg-base-100 shadow-md">
-              <div className="card-body text-center py-12">
-                <p className="text-base-content/60">
-                  No tienes solicitudes registradas con este correo.
-                </p>
-                <p className="text-sm text-base-content/50 mt-2">
-                  ¿Quieres solicitar una asesoría?
-                </p>
-                <div className="card-actions justify-center mt-4">
-                  <Link to="/agendar-asesoria" className="btn btn-primary">
-                    Agendar Asesoría
-                  </Link>
-                </div>
-              </div>
-            </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">
+            {loading ? 'Cargando...' : requests.length === 0 ? 'No tienes solicitudes' : `${requests.length} solicitud(es)`}
+          </h2>
+          {!showNewRequestForm && (
+            <Link
+              to="/agendar-asesoria"
+              className="btn btn-primary btn-sm"
+            >
+              + Nueva Solicitud
+            </Link>
           )}
         </div>
-      )}
+
+        {/* Formulario de nueva solicitud */}
+        {showNewRequestForm && (
+          <div className="card bg-base-100 shadow-lg border-2 border-primary">
+            <div className="card-body">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Nueva Solicitud</h3>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setShowNewRequestForm(false)}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitNewRequest} className="space-y-4">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Programador *</span>
+                  </label>
+                  <select
+                    name="programmerId"
+                    value={form.programmerId}
+                    onChange={handleFormChange}
+                    className="select select-bordered"
+                    required
+                  >
+                    <option value="">Selecciona un programador</option>
+                    {programmers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.displayName} · {p.specialty}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Tu nombre *</span>
+                    </label>
+                    <input
+                      name="requesterName"
+                      value={form.requesterName}
+                      onChange={handleFormChange}
+                      className="input input-bordered"
+                      placeholder="Tu nombre"
+                      required
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Correo *</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="requesterEmail"
+                      value={form.requesterEmail}
+                      onChange={handleFormChange}
+                      className="input input-bordered"
+                      placeholder="correo@ejemplo.com"
+                      required
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Fecha *</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={form.date}
+                      onChange={handleFormChange}
+                      className="input input-bordered"
+                      required
+                    />
+                  </div>
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Hora *</span>
+                    </label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={form.time}
+                      onChange={handleFormChange}
+                      className="input input-bordered"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Motivo / nota</span>
+                  </label>
+                  <textarea
+                    name="note"
+                    value={form.note}
+                    onChange={handleFormChange}
+                    className="textarea textarea-bordered"
+                    rows={3}
+                    placeholder="Describe brevemente el motivo de tu solicitud..."
+                  />
+                </div>
+
+                <div className="card-actions justify-end">
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setShowNewRequestForm(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Enviando...' : 'Enviar Solicitud'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de solicitudes */}
+        {requests.length > 0 ? (
+          <div className="space-y-3">
+            {requests
+              .sort((a, b) => {
+                const dateA = a.createdAt?.toMillis?.() || 0
+                const dateB = b.createdAt?.toMillis?.() || 0
+                return dateB - dateA
+              })
+              .map((request) => (
+                <div key={request.id} className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
+                  <div className="card-body">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">
+                          Asesoría con {getProgrammerName(request.programmerId)}
+                        </h3>
+                        <p className="text-sm text-base-content/60">
+                          {request.requesterName}
+                        </p>
+                      </div>
+                      {getStatusBadge(request.status)}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      <div>
+                        <span className="text-xs text-base-content/60">Fecha:</span>
+                        <p className="font-medium">{request.slot?.date}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-base-content/60">Hora:</span>
+                        <p className="font-medium">{request.slot?.time}</p>
+                      </div>
+                    </div>
+
+                    {request.note && (
+                      <div className="mt-2">
+                        <span className="text-xs text-base-content/60">Tu nota:</span>
+                        <p className="text-sm">{request.note}</p>
+                      </div>
+                    )}
+
+                    {request.responseMessage && (
+                      <div className={`alert ${request.status === 'aprobada' ? 'alert-success' : 'alert-error'} mt-3`}>
+                        <div>
+                          <span className="font-semibold">Respuesta del programador:</span>
+                          <p>{request.responseMessage}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-base-content/50 mt-2">
+                      Solicitada: {request.createdAt?.toDate?.().toLocaleDateString('es-ES') || 'Fecha no disponible'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : !loading && (
+          <div className="card bg-base-100 shadow-md">
+            <div className="card-body text-center py-12">
+              <p className="text-base-content/60">
+                No tienes solicitudes registradas.
+              </p>
+              <p className="text-sm text-base-content/50 mt-2">
+                ¿Quieres solicitar una asesoría?
+              </p>
+              <div className="card-actions justify-center mt-4">
+                <Link to="/agendar-asesoria" className="btn btn-primary">
+                  Agendar Asesoría
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

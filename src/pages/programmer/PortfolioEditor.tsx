@@ -4,7 +4,7 @@
  */
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { getPortfolio, upsertPortfolio } from '../../services/firestore'
+import { getPortfolio, upsertPortfolio } from '../../services/firestore.service'
 
 const initial = {
   headline: '',

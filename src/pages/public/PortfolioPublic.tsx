@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getPortfolio, listProjectsByOwner, type Portfolio } from '../../services/firestore'
+import { getPortfolio, listProjectsByOwner, type Portfolio } from '../../services/firestore.service'
 import type { DocumentData } from 'firebase/firestore'
 
 const PortfolioPublic = () => {

@@ -155,7 +155,7 @@ export default {
         },
       },
     ],
-    darkTheme: 'rosepink',
+    darkTheme: 'luxury',
     base: true,
     styled: true,
     utils: true,

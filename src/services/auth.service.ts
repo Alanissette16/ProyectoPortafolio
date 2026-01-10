@@ -18,10 +18,14 @@ import {
   setDoc,
   serverTimestamp,
   DocumentData,
+  onSnapshot,
 } from 'firebase/firestore'
-import { auth, db, googleProvider } from './firebase'
+import { auth, db, googleProvider } from './firebase.config'
 
-export type Role = 'admin' | 'programmer' | 'external'
+import { UserRole } from '../models/User'
+
+// Re-exportamos para compatibilidad
+export type Role = UserRole
 
 export interface UserProfile {
   displayName: string | null
@@ -38,9 +42,9 @@ const USERS_COLLECTION = 'users'
 // Función para crear/actualizar usuario en Firestore
 export const saveUserToFirestore = async (user: FirebaseUser): Promise<void> => {
   const userRef = doc(db, USERS_COLLECTION, user.uid)
-  
+
   const userDoc = await getDoc(userRef)
-  
+
   if (!userDoc.exists()) {
     await setDoc(userRef, {
       displayName: user.displayName || 'Usuario',
@@ -64,9 +68,9 @@ export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider)
     const user = result.user
-    
+
     await saveUserToFirestore(user)
-    
+
     return user
   } catch (error: any) {
     if (error.code === 'auth/popup-closed-by-user') {
@@ -81,13 +85,13 @@ export const loginWithEmail = async (email: string, password: string) => {
   try {
     const result = await signInWithEmailAndPassword(auth, email, password)
     const user = result.user
-    
+
     // Actualizar lastLogin en Firestore
     const userRef = doc(db, USERS_COLLECTION, user.uid)
     await setDoc(userRef, {
       lastLogin: serverTimestamp(),
     }, { merge: true })
-    
+
     return user
   } catch (error: any) {
     throw error
@@ -99,12 +103,12 @@ export const registerWithEmail = async (email: string, password: string, display
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password)
     const user = result.user
-    
+
     // Actualizar el perfil con el nombre
     await updateProfile(user, {
       displayName: displayName,
     })
-    
+
     // Crear documento en Firestore
     const userRef = doc(db, USERS_COLLECTION, user.uid)
     await setDoc(userRef, {
@@ -115,7 +119,7 @@ export const registerWithEmail = async (email: string, password: string, display
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
     })
-    
+
     return user
   } catch (error: any) {
     throw error
@@ -139,4 +143,27 @@ export const fetchUserProfile = async (
   } catch {
     return null
   }
+}
+
+// Escucha de cambios en perfil de Firestore (Roles en tiempo real)
+export const subscribeToUserProfile = (
+  uid: string,
+  callback: (profile: (UserProfile & DocumentData) | null) => void,
+): Unsubscribe => {
+  return onSnapshot(
+    doc(db, USERS_COLLECTION, uid),
+    (snap) => {
+      if (snap.exists()) {
+        console.log('[Auth] Perfil actualizado desde DB:', snap.data().role)
+        callback(snap.data() as UserProfile & DocumentData)
+      } else {
+        console.log('[Auth] Perfil no encontrado en DB, usando defaults')
+        callback(null)
+      }
+    },
+    (error) => {
+      console.error('[Auth] Error escuchando perfil:', error)
+      callback(null)
+    }
+  )
 }

@@ -18,11 +18,11 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Logo from '../../components/Logo'
-import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../services/auth'
+import Logo from '../../components/common/Logo'
+import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../services/auth.service'
 
 // Imagen de fondo
-import logoPremium from '../../img/logopremiun.png'
+import logoPremium from '../../assets/images/logos/logo-premium.png'
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -51,24 +51,24 @@ const LoginPage = () => {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    
+
     if (!email || !password) {
       setError('Por favor completa todos los campos 💖')
       return
     }
-    
+
     if (isRegisterMode && !displayName) {
       setError('Por favor ingresa tu nombre 💖')
       return
     }
-    
+
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres 💖')
       return
     }
-    
+
     setLoading(true)
-    
+
     try {
       if (isRegisterMode) {
         await registerWithEmail(email, password, displayName)
@@ -116,7 +116,7 @@ const LoginPage = () => {
             className="absolute bottom-10 left-1/2 -translate-x-1/2 w-72 h-72 object-contain opacity-15"
           />
         </div>
-        
+
         {/* Partículas flotantes */}
         {[...Array(12)].map((_, i) => (
           <motion.div
@@ -138,7 +138,7 @@ const LoginPage = () => {
             }}
           />
         ))}
-        
+
         {/* Contenido */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
           {/* Logo clickeable para login secreto */}
@@ -159,7 +159,7 @@ const LoginPage = () => {
               </motion.div>
             </div>
           </motion.div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,19 +168,19 @@ const LoginPage = () => {
           >
             F O R E I N G
           </motion.h1>
-          
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
             className="text-lg text-white/85 font-body text-center max-w-md mb-10"
           >
-            Creative Tech Studio ✨  
+            Creative Tech Studio ✨
             <span className="block text-sm text-white/70 mt-3">
               Diseño, desarrollo y experiencias digitales con esencia dorada.
             </span>
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -208,11 +208,11 @@ const LoginPage = () => {
               </div>
             </div>
             <p className="text-white/85 font-body text-sm">
-              Únete a una experiencia digital  
+              Únete a una experiencia digital
               <span className="block text-white/70 text-xs">cuidada, femenina y sofisticada.</span>
             </p>
           </motion.div>
-          
+
           {/* Texto flotante inferior */}
           <motion.div
             animate={{ y: [0, -8, 0] }}
@@ -251,7 +251,7 @@ const LoginPage = () => {
                 Foreing
               </h1>
             </div>
-            
+
             {/* Header */}
             <div className="text-center mb-8">
               <div
@@ -263,18 +263,18 @@ const LoginPage = () => {
                   {isRegisterMode ? 'Crea tu cuenta' : 'Bienvenida de nuevo'}
                 </span>
               </div>
-              
+
               <h2 className="text-2xl sm:text-3xl font-display font-bold text-[#3D3321] mb-2">
                 {isRegisterMode ? 'Registrarse' : 'Iniciar sesión'}
               </h2>
-              
+
               <p className="text-xs sm:text-sm text-[#7C6A4A] font-body">
-                {isRegisterMode 
-                  ? 'Únete a FOREING y comienza tu viaje creativo ✨' 
+                {isRegisterMode
+                  ? 'Únete a FOREING y comienza tu viaje creativo ✨'
                   : 'Accede a tu espacio creativo y continúa donde lo dejaste ✨'}
               </p>
             </div>
-            
+
             {/* Error message */}
             {error && (
               <motion.div
@@ -286,7 +286,7 @@ const LoginPage = () => {
                 {error}
               </motion.div>
             )}
-            
+
             {/* Google Login Button */}
             <motion.button
               initial={{ opacity: 0, y: 14 }}
@@ -297,16 +297,16 @@ const LoginPage = () => {
               className="w-full flex items-center justify-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-[#D4AF37]/22 hover:border-[#D4AF37]/45 transition-all duration-300 shadow-[0_10px_22px_rgba(212,175,55,0.15)] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
               <span className="font-semibold text-sm sm:text-base text-[#3D3321] font-body">
                 {loading ? 'Conectando...' : 'Continuar con Google'}
               </span>
             </motion.button>
-            
+
             {/* Divider */}
             <div className="relative my-7 sm:my-8">
               <div className="absolute inset-0 flex items-center">
@@ -320,7 +320,7 @@ const LoginPage = () => {
                 </span>
               </div>
             </div>
-            
+
             {/* Email Form */}
             <motion.form
               initial={{ opacity: 0, y: 16 }}
@@ -364,7 +364,7 @@ const LoginPage = () => {
                   />
                 </div>
               </div>
-              
+
               {/* Password Input */}
               <div className="space-y-1.5">
                 <label className="text-xs sm:text-sm font-medium text-[#5D4C30] font-body flex items-center gap-2">
@@ -388,7 +388,7 @@ const LoginPage = () => {
                   </button>
                 </div>
               </div>
-              
+
               {/* Forgot Password - Solo en modo login */}
               {!isRegisterMode && (
                 <div className="flex justify-end">
@@ -400,7 +400,7 @@ const LoginPage = () => {
                   </button>
                 </div>
               )}
-              
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -415,7 +415,7 @@ const LoginPage = () => {
                 />
               </button>
             </motion.form>
-            
+
             {/* Footer */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -425,7 +425,7 @@ const LoginPage = () => {
             >
               <p className="text-center text-[11px] sm:text-sm text-[#8F7A51] font-body">
                 {isRegisterMode ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
-                <button 
+                <button
                   type="button"
                   onClick={() => {
                     setIsRegisterMode(!isRegisterMode)
@@ -437,7 +437,7 @@ const LoginPage = () => {
                   {isRegisterMode ? 'Inicia sesión' : 'Regístrate gratis'}
                 </button>
               </p>
-              
+
               <div className="flex items-center justify-center gap-3 mt-5">
                 <Heart size={15} className="text-[#D4AF37] fill-[#D4AF37]" />
                 <span className="text-[10px] sm:text-xs text-[#B49A69] font-body tracking-[0.18em] uppercase">

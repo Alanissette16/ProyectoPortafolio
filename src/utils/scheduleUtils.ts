@@ -1,4 +1,4 @@
-import type { ScheduleSlot } from '../services/firestore'
+import type { ScheduleSlot } from '../services/firestore.service'
 
 /**
  * Verifica si un programador está disponible ahora mismo

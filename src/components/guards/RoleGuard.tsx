@@ -4,14 +4,14 @@
  */
 import { Navigate } from 'react-router-dom'
 import { ReactNode } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { Role } from '../services/auth'
+import { useAuth } from '../../context/AuthContext'
+import { UserRole } from '../../models/User'
 
 const RoleGuard = ({
   allowedRoles,
   children,
 }: {
-  allowedRoles: Role[]
+  allowedRoles: UserRole[]
   children: ReactNode
 }) => {
   const { role, loading } = useAuth()

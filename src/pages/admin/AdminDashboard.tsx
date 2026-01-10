@@ -4,10 +4,10 @@
  */
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { motion } from 'framer-motion'
-import { Calendar, CheckCircle, Clock, Settings, TrendingUp, Users } from 'lucide-react'
+import { Calendar, CheckCircle, Clock, Settings, TrendingUp, Users, ShieldCheck, UserCog } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { db } from '../../services/firebase'
+import { db } from '../../services/firebase.config'
 
 const AdminDashboard = () => {
   const [programmersCount, setProgrammersCount] = useState<number>(0)
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-8 p-6 pt-20"
       variants={containerVariants}
       initial="hidden"
@@ -75,7 +75,7 @@ const AdminDashboard = () => {
       {/* Stats Cards */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Programadores */}
-        <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-full -mr-8 -mt-8" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Asesorías Pendientes */}
-        <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#B8860B]/10 to-transparent rounded-full -mr-8 -mt-8" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Proyectos - Placeholder */}
-        <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#D4A574]/10 to-transparent rounded-full -mr-8 -mt-8" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -127,7 +127,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Satisfacción - Placeholder */}
-        <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div className="relative overflow-hidden rounded-3xl p-6 bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-full -mr-8 -mt-8" />
           <div className="relative">
             <div className="flex items-center justify-between mb-4">
@@ -144,7 +144,7 @@ const AdminDashboard = () => {
       {/* Action Cards */}
       <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Gestionar Programadores */}
-        <div className="group relative overflow-hidden rounded-2xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
+        <div className="group relative overflow-hidden rounded-3xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
           <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative p-6">
             <div className="flex items-start justify-between mb-4">
@@ -161,9 +161,9 @@ const AdminDashboard = () => {
             <p className="text-[#8B7355] font-body text-sm mb-6 leading-relaxed">
               Crear y editar perfiles, asignar roles y configurar datos de contacto del equipo.
             </p>
-            <Link 
+            <Link
               to="/admin/programadores"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold font-body transition-all hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold font-body transition-all hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}
             >
               Abrir Gestión
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Horarios de Asesoría */}
-        <div className="group relative overflow-hidden rounded-2xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
+        <div className="group relative overflow-hidden rounded-3xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
           <div className="absolute inset-0 bg-gradient-to-br from-[#B8860B]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative p-6">
             <div className="flex items-start justify-between mb-4">
@@ -190,9 +190,9 @@ const AdminDashboard = () => {
             <p className="text-[#8B7355] font-body text-sm mb-6 leading-relaxed">
               Registra la disponibilidad de cada programador para que los usuarios puedan agendar.
             </p>
-            <Link 
+            <Link
               to="/admin/horarios"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold font-body transition-all hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold font-body transition-all hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #B8860B, #8B7355)' }}
             >
               Configurar
@@ -202,7 +202,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Proyectos Admin */}
-        <div className="group relative overflow-hidden rounded-2xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
+        <div className="group relative overflow-hidden rounded-3xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
           <div className="absolute inset-0 bg-gradient-to-br from-[#D4A574]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative p-6">
             <div className="flex items-start justify-between mb-4">
@@ -219,13 +219,43 @@ const AdminDashboard = () => {
             <p className="text-[#8B7355] font-body text-sm mb-6 leading-relaxed">
               Administra y supervisa todos los proyectos del portafolio de la empresa.
             </p>
-            <Link 
+            <Link
               to="/admin/proyectos"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold font-body transition-all hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold font-body transition-all hover:scale-105"
               style={{ background: 'linear-gradient(135deg, #D4A574, #8B7355)' }}
             >
               Ver Proyectos
               <TrendingUp size={18} />
+            </Link>
+          </div>
+        </div>
+
+
+        {/* Usuarios y Roles */}
+        <div className="group relative overflow-hidden rounded-3xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-[#D4AF37]/40">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#8B7355]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="relative p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(139, 115, 85, 0.15), rgba(93, 78, 55, 0.1))' }}>
+                <ShieldCheck className="text-[#8B7355]" size={28} />
+              </div>
+              <span className="px-3 py-1 text-xs font-semibold rounded-full text-[#8B7355] bg-[#8B7355]/10">
+                Admin
+              </span>
+            </div>
+            <h2 className="text-xl font-display font-bold text-[#5D4E37] mb-2">
+              Usuarios y Roles
+            </h2>
+            <p className="text-[#8B7355] font-body text-sm mb-6 leading-relaxed">
+              Asigna permisos de administrador, programador o usuario externo.
+            </p>
+            <Link
+              to="/admin/usuarios"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold font-body transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, #8B7355, #5D4E37)' }}
+            >
+              Gestionar
+              <UserCog size={18} />
             </Link>
           </div>
         </div>

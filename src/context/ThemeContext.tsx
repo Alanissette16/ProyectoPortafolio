@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from 'react'
 
-type Theme = 'rosegold' | 'lavender' | 'rosepink'
+export type Theme = 'rosegold' | 'lavender' | 'rosepink'
 
 const validThemes: Theme[] = ['rosegold', 'lavender', 'rosepink']
 

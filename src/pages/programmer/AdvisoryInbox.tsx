@@ -18,8 +18,8 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db } from '../../services/firebase'
-import { updateAdvisoryStatus } from '../../services/firestore'
+import { db } from '../../services/firebase.config'
+import { updateAdvisoryStatus } from '../../services/firestore.service'
 
 interface Advisory {
   id: string
@@ -31,6 +31,17 @@ interface Advisory {
   note?: string
   status: string
   createdAt?: any
+}
+
+// Función para ocultar parcialmente el email por privacidad
+const maskEmail = (email?: string): string => {
+  if (!email) return 'Sin email'
+  const [local, domain] = email.split('@')
+  if (!domain) return email
+  const maskedLocal = local.length > 2
+    ? local[0] + '***' + local[local.length - 1]
+    : local[0] + '***'
+  return `${maskedLocal}@${domain}`
 }
 
 const AdvisoryInbox = () => {
@@ -59,27 +70,27 @@ const AdvisoryInbox = () => {
       const advisoriesRef = collection(db, 'advisories')
       const q = query(advisoriesRef, where('programmerId', '==', user?.uid))
       const snap = await getDocs(q)
-      
+
       if (snap.empty) {
         setItems([])
         setLoading(false)
         return
       }
-      
+
       const data: Advisory[] = snap.docs.map((d) => {
-        return { 
-          id: d.id, 
-          ...d.data() 
+        return {
+          id: d.id,
+          ...d.data()
         } as Advisory
       })
-      
+
       // Ordenar por fecha de creación (más recientes primero)
       const sorted = data.sort((a, b) => {
         const dateA = a.createdAt?.toDate?.() || new Date(0)
         const dateB = b.createdAt?.toDate?.() || new Date(0)
         return dateB.getTime() - dateA.getTime()
       })
-      
+
       setItems(sorted)
     } catch (err: any) {
       setError(`Error: ${err?.message || 'No se pudieron cargar las asesorías.'}`)
@@ -127,13 +138,13 @@ const AdvisoryInbox = () => {
       alert('Por favor ingresa un mensaje de respuesta')
       return
     }
-    
+
     await updateStatus(responseModal.advisoryId, responseModal.action, responseModal.message)
     closeResponseModal()
   }
 
-  const filteredItems = filter === 'todas' 
-    ? items 
+  const filteredItems = filter === 'todas'
+    ? items
     : items.filter(item => item.status === filter)
 
   const getStatusBadge = (status: string) => {
@@ -154,7 +165,7 @@ const AdvisoryInbox = () => {
   return (
     <div className="relative min-h-screen p-20 mx-auto">
       {/* Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
@@ -176,9 +187,9 @@ const AdvisoryInbox = () => {
               Revisa y gestiona las solicitudes de asesoría que has recibido
             </p>
           </div>
-          
-          <button 
-            onClick={load} 
+
+          <button
+            onClick={load}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#D4AF37]/30 text-[#5D4E37] font-semibold hover:bg-[#FFF8E7] transition-all disabled:opacity-50"
           >
@@ -189,7 +200,7 @@ const AdvisoryInbox = () => {
       </motion.div>
 
       {/* Filtros */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -206,11 +217,10 @@ const AdvisoryInbox = () => {
           <button
             key={f.key}
             onClick={() => setFilter(f.key as any)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-              filter === f.key 
-                ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-white shadow-md' 
-                : `${f.color} hover:opacity-80`
-            }`}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${filter === f.key
+              ? 'bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-white shadow-md'
+              : `${f.color} hover:opacity-80`
+              }`}
           >
             {f.label}
           </button>
@@ -219,7 +229,7 @@ const AdvisoryInbox = () => {
 
       {/* Error */}
       {error && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2"
@@ -246,7 +256,7 @@ const AdvisoryInbox = () => {
       {!loading && (
         <div className="space-y-4">
           {filteredItems.length === 0 ? (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="text-center py-16 px-6 rounded-2xl bg-white border border-[#D4AF37]/10"
@@ -268,72 +278,89 @@ const AdvisoryInbox = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-6 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all"
+                className="relative overflow-hidden rounded-3xl bg-white border border-[#D4AF37]/20 shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                  {/* Info del solicitante */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#D4AF37]/20 to-[#B8860B]/20 flex items-center justify-center">
-                        <User className="text-[#D4AF37]" size={24} />
+                {/* Decorative gradient background */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#D4AF37]/10 via-[#B8860B]/5 to-transparent rounded-full -mr-20 -mt-20" />
+
+                <div className="relative p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+                    {/* Info del solicitante */}
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                          <User className="text-white" size={28} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-display font-bold text-[#5D4E37] text-xl mb-1">
+                            {item.requesterName || 'Usuario'}
+                          </h3>
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FFF8E7] to-[#FFF0D4] w-fit">
+                            <Mail size={14} className="text-[#D4AF37]" />
+                            <p className="text-sm text-[#5D4E37] font-medium">
+                              {maskEmail(item.requesterEmail)}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-display font-bold text-[#5D4E37] text-lg">
-                          {item.requesterName || 'Usuario'}
-                        </h3>
-                        <p className="text-sm text-[#8B7355] flex items-center gap-1">
-                          <Mail size={14} />
-                          {item.requesterEmail || 'Sin email'}
-                        </p>
+
+                      {/* Fecha y hora */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(184, 134, 11, 0.05))' }}>
+                          <Calendar size={18} className="text-[#D4AF37]" />
+                          <span className="text-sm font-semibold text-[#5D4E37]">
+                            {item.slot?.date || 'Sin fecha'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(184, 134, 11, 0.1), rgba(139, 115, 85, 0.05))' }}>
+                          <Clock size={18} className="text-[#B8860B]" />
+                          <span className="text-sm font-semibold text-[#5D4E37]">
+                            {item.slot?.time || 'Sin hora'}
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Nota/mensaje */}
+                      {item.note && (
+                        <div className="p-5 rounded-2xl border-l-4 border-[#D4AF37] shadow-sm" style={{ background: 'linear-gradient(to right, #FFFAF5, #FFFFFF)' }}>
+                          <div className="flex items-start gap-2 mb-2">
+                            <MessageSquare size={16} className="text-[#D4AF37] mt-0.5" />
+                            <p className="text-xs font-semibold text-[#D4AF37] uppercase tracking-wider">Mensaje</p>
+                          </div>
+                          <p className="text-sm text-[#5D4E37] font-body leading-relaxed">
+                            {item.note}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Fecha y hora */}
-                    <div className="flex flex-wrap items-center gap-4 mb-3">
-                      <span className="flex items-center gap-2 text-sm text-[#5D4E37] bg-[#FFF8E7] px-3 py-1.5 rounded-lg">
-                        <Calendar size={16} className="text-[#D4AF37]" />
-                        {item.slot?.date || 'Sin fecha'}
-                      </span>
-                      <span className="flex items-center gap-2 text-sm text-[#5D4E37] bg-[#FFF8E7] px-3 py-1.5 rounded-lg">
-                        <Clock size={16} className="text-[#D4AF37]" />
-                        {item.slot?.time || 'Sin hora'}
-                      </span>
+                    {/* Estado y acciones */}
+                    <div className="flex flex-col items-end gap-3">
+                      {getStatusBadge(item.status)}
+
+                      {item.status === 'pendiente' && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => openResponseModal(item.id, 'aprobada')}
+                            disabled={updating === item.id}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-50 shadow-md text-white"
+                            style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
+                          >
+                            <CheckCircle size={18} />
+                            Aprobar
+                          </button>
+                          <button
+                            onClick={() => openResponseModal(item.id, 'rechazada')}
+                            disabled={updating === item.id}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold hover:scale-105 transition-all disabled:opacity-50 shadow-md text-white"
+                            style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}
+                          >
+                            <XCircle size={18} />
+                            Rechazar
+                          </button>
+                        </div>
+                      )}
                     </div>
-
-                    {/* Nota/mensaje */}
-                    {item.note && (
-                      <div className="p-4 rounded-xl bg-[#FFFAF5] border border-[#D4AF37]/10">
-                        <p className="text-sm text-[#5D4E37] font-body whitespace-pre-wrap">
-                          {item.note}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Estado y acciones */}
-                  <div className="flex flex-col items-end gap-3">
-                    {getStatusBadge(item.status)}
-                    
-                    {item.status === 'pendiente' && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => openResponseModal(item.id, 'aprobada')}
-                          disabled={updating === item.id}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-all disabled:opacity-50"
-                        >
-                          <CheckCircle size={18} />
-                          Aprobar
-                        </button>
-                        <button
-                          onClick={() => openResponseModal(item.id, 'rechazada')}
-                          disabled={updating === item.id}
-                          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-all disabled:opacity-50"
-                        >
-                          <XCircle size={18} />
-                          Rechazar
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
               </motion.div>
@@ -363,15 +390,15 @@ const AdvisoryInbox = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6">
               <p className="text-base-content/70 mb-4">
-                {responseModal.action === 'aprobada' 
+                {responseModal.action === 'aprobada'
                   ? 'Ingresa un mensaje de confirmación para el solicitante:'
                   : 'Ingresa una justificación para el rechazo:'
                 }
               </p>
-              
+
               <textarea
                 value={responseModal.message}
                 onChange={(e) => setResponseModal(prev => ({ ...prev, message: e.target.value }))}
@@ -379,7 +406,7 @@ const AdvisoryInbox = () => {
                 className="w-full px-4 py-3 rounded-xl border-2 border-base-300 focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none transition-all resize-none"
                 placeholder="Escribe tu mensaje aquí..."
               />
-              
+
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={closeResponseModal}
@@ -390,11 +417,10 @@ const AdvisoryInbox = () => {
                 <button
                   onClick={handleResponseSubmit}
                   disabled={updating === responseModal.advisoryId}
-                  className={`flex-1 px-4 py-3 rounded-xl text-white font-semibold transition-all ${
-                    responseModal.action === 'aprobada'
-                      ? 'bg-green-500 hover:bg-green-600'
-                      : 'bg-red-500 hover:bg-red-600'
-                  } disabled:opacity-50`}
+                  className={`flex-1 px-4 py-3 rounded-xl text-white font-semibold transition-all ${responseModal.action === 'aprobada'
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-red-500 hover:bg-red-600'
+                    } disabled:opacity-50`}
                 >
                   {updating === responseModal.advisoryId ? 'Enviando...' : 'Enviar'}
                 </button>

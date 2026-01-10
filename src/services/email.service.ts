@@ -6,10 +6,11 @@
 import emailjs from '@emailjs/browser'
 
 // Configuración de EmailJS
-const serviceId = "service_jcoyc8l"
-const templateRequester = "template_shudliq"
-const templateProgrammer = "template_zijzaul"
-const publicKey = "2hWPAgjtrE7y_w85W"
+// Configuración de EmailJS (Variables de Entorno con fallback)
+const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || "service_jcoyc8l"
+const templateRequester = import.meta.env.VITE_EMAILJS_TEMPLATE_REQUESTER || "template_shudliq"
+const templateProgrammer = import.meta.env.VITE_EMAILJS_TEMPLATE_PROGRAMMER || "template_zijzaul"
+const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "2hWPAgjtrE7y_w85W"
 
 // Verifica configuración
 const isConfigured = (templateId?: string) =>

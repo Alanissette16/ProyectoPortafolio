@@ -121,6 +121,47 @@
   .hover-glow {
     @apply transition-all hover:shadow-lg hover:shadow-primary/20;
   }
+
+  /* Icon Animations & Effects */
+  .icon-hover {
+    @apply transition-all duration-300 ease-in-out hover:scale-110;
+  }
+
+  .icon-hover-rotate {
+    @apply transition-all duration-300 ease-in-out hover:scale-110 hover:rotate-6;
+  }
+
+  .icon-pulse {
+    @apply animate-pulse;
+  }
+
+  .icon-spin {
+    @apply animate-spin;
+  }
+
+  .icon-bounce {
+    @apply transition-transform duration-300 hover:animate-bounce;
+  }
+
+  /* Icon badge container */
+  .icon-badge {
+    @apply relative inline-flex items-center justify-center;
+  }
+
+  /* Icon glow effect for highlighted icons */
+  .icon-glow {
+    filter: drop-shadow(0 0 8px currentColor);
+    @apply transition-all duration-300;
+  }
+
+  .icon-glow:hover {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+
+  /* Icon button - combines icon with button styling */
+  .icon-btn {
+    @apply inline-flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105;
+  }
 }
 
 /* Componentes personalizados */

@@ -7,7 +7,7 @@ import { ArrowRight, Briefcase, FolderOpen, MessageSquare, Sparkles, User } from
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { listAdvisoriesByProgrammer } from '../../services/firestore'
+import { listAdvisoriesByProgrammer } from '../../services/firestore.service'
 
 const ProgrammerDashboard = () => {
   const containerVariants = {

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react'
 import { FiEdit2, FiGithub, FiImage, FiPlus, FiSave, FiTrash2, FiX } from 'react-icons/fi'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { db, storage } from '../../services/firebase'
+import { db, storage } from '../../services/firebase.config'
 import { FormUtils } from '../../utils/FormUtils'
 
 interface Project {

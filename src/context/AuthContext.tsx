@@ -16,9 +16,10 @@ import {
   subscribeToAuthChanges,
   fetchUserProfile,
   saveUserToFirestore,
+  subscribeToUserProfile,
   Role,
   UserProfile,
-} from '../services/auth'
+} from '../services/auth.service'
 
 interface AuthContextValue {
   user: (UserProfile & { uid: string }) | null
@@ -34,11 +35,19 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<(UserProfile & { uid: string }) | null>(null)
   const [role, setRole] = useState<Role | null>(null)
+
   const [loading, setLoading] = useState(true)
 
-  // Escuchamos cambios de sesión
+  // Escuchamos cambios de sesión y perfil en tiempo real
   useEffect(() => {
-    const unsub = subscribeToAuthChanges(async (firebaseUser) => {
+    let unsubscribeProfile: (() => void) | undefined
+
+    const unsubscribeAuth = subscribeToAuthChanges(async (firebaseUser) => {
+      if (unsubscribeProfile) {
+        unsubscribeProfile()
+        unsubscribeProfile = undefined
+      }
+
       if (!firebaseUser) {
         setUser(null)
         setRole(null)
@@ -46,38 +55,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return
       }
 
-      // Intentar obtener perfil de Firestore
-      let profile = await fetchUserProfile(firebaseUser.uid)
-      
-      // Si no existe el perfil, crearlo
-      if (!profile) {
-        try {
-          await saveUserToFirestore(firebaseUser)
-          profile = await fetchUserProfile(firebaseUser.uid)
-        } catch {
-          // Silenciar error
+      // Asegurar registro inicial
+      try {
+        await saveUserToFirestore(firebaseUser)
+      } catch (error) {
+        console.error('Error registrando usuario:', error)
+      }
+
+      // Suscribirse a cambios del documento en Firestore
+      unsubscribeProfile = subscribeToUserProfile(firebaseUser.uid, (profile) => {
+        if (profile) {
+          const roleStr = typeof profile.role === 'string' ? profile.role.trim() : 'external'
+          const safeRole = (['admin', 'programmer', 'external'].includes(roleStr) ? roleStr : 'external') as Role
+
+          setUser({ uid: firebaseUser.uid, ...profile })
+          setRole(safeRole)
+        } else {
+          // Fallback visual
+          setUser({
+            uid: firebaseUser.uid,
+            displayName: firebaseUser.displayName || '',
+            email: firebaseUser.email || '',
+            photoURL: firebaseUser.photoURL || undefined,
+            role: 'external',
+          })
+          setRole('external')
         }
-      }
-      
-      if (profile) {
-        setUser({ uid: firebaseUser.uid, ...profile })
-        setRole(profile.role ?? 'external')
-      } else {
-        // Usar datos de Firebase Auth si no hay perfil en Firestore
-        setUser({
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
-          role: 'external',
-        })
-        setRole('external')
-      }
-      
-      setLoading(false)
+        setLoading(false)
+      })
     })
 
-    return unsub
+    return () => {
+      unsubscribeAuth()
+      if (unsubscribeProfile) unsubscribeProfile()
+    }
   }, [])
 
   // Login con Google

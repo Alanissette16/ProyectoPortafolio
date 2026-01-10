@@ -9,7 +9,7 @@ import {
   listProgrammers,
   upsertSchedule,
   type ScheduleSlot,
-} from '../../services/firestore'
+} from '../../services/firestore.service'
 
 // Programadores estáticos que deben aparecer en el selector
 const staticProgrammers = [

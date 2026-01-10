@@ -3,8 +3,8 @@
  * Prácticas: UX (consistencia), Routing anidado protegido.
  */
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import NavBar from '../components/NavBar'
-import { Home, Users, FolderOpen, Calendar, Briefcase, MessageSquare, User } from 'lucide-react'
+import NavBar from '../components/layout/NavBar'
+import { Home, Users, FolderOpen, Calendar, Briefcase, MessageSquare, User, ShieldAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
@@ -15,6 +15,8 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
     { to: '/admin/programadores', label: 'Programadores', icon: Users },
     { to: '/admin/proyectos', label: 'Proyectos', icon: FolderOpen },
     { to: '/admin/horarios', label: 'Horarios', icon: Calendar },
+    { to: '/admin/usuarios', label: 'Usuarios y Roles', icon: ShieldAlert },
+
   ]
 
   const programmerLinks = [
@@ -37,11 +39,11 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFFAF0 0%, #FFF8E7 50%, #FFF5E6 100%)' }}>
       <NavBar />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
-          <motion.aside 
+          <motion.aside
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="lg:w-64 flex-shrink-0"
@@ -65,11 +67,10 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
                       <li key={link.to}>
                         <Link
                           to={link.to}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl font-body text-sm transition-all duration-200 ${
-                            active 
-                              ? 'text-white shadow-md' 
-                              : 'text-[#5D4E37]/70 hover:bg-[#FFF5E6] hover:text-[#D4AF37]'
-                          }`}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl font-body text-sm transition-all duration-200 ${active
+                            ? 'text-white shadow-md'
+                            : 'text-[#5D4E37]/70 hover:bg-[#FFF5E6] hover:text-[#D4AF37]'
+                            }`}
                           style={active ? { background: 'linear-gradient(135deg, #D4AF37, #B8860B)' } : {}}
                         >
                           <Icon size={18} />
@@ -92,7 +93,7 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
           </motion.aside>
 
           {/* Main Content */}
-          <motion.main 
+          <motion.main
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex-1 min-w-0"

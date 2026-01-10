@@ -23,12 +23,12 @@ import {
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getScheduleByProgrammer, listProgrammers } from '../../services/firestore'
+import { getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
 import { getPhotoURL } from '../../utils/photoStorage'
 
 // Imágenes del equipo
-import fotoClaudia from '../../img/FOTOclau.jpg'
-import fotoValeria from '../../img/fotovale.jpg'
+import fotoClaudia from '../../assets/images/team/claudia.jpg'
+import fotoValeria from '../../assets/images/team/valeria.jpg'
 
 // Tipo para miembros del equipo
 interface TeamMember {
@@ -60,7 +60,9 @@ interface TeamMember {
 }
 
 const ProgrammerDirectory = () => {
-  const { user } = useAuth()
+  const { user, role, isAuthenticated } = useAuth()
+
+  const canRequestAdvisory = !isAuthenticated || (role !== 'admin' && role !== 'programmer')
   const [hoveredMember, setHoveredMember] = useState<string | null>(null)
   const [firestoreProgrammers, setFirestoreProgrammers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,7 +149,7 @@ const ProgrammerDirectory = () => {
     const loadProgrammers = async () => {
       try {
         const programmers = await listProgrammers()
-        
+
         // Convertir a formato TeamMember
         const converted: TeamMember[] = programmers.map((prog: any, index: number) => {
           // Alternar gradientes para variedad
@@ -158,9 +160,9 @@ const ProgrammerDirectory = () => {
             { gradient: 'from-[#4CAF50] to-[#388E3C]', bgGradient: 'from-[#E8F5E9] to-[#C8E6C9]' },
           ]
           const colorSet = gradients[index % gradients.length]
-          
+
           // Convertir skills al formato correcto
-          const skills = Array.isArray(prog.skills) 
+          const skills = Array.isArray(prog.skills)
             ? prog.skills.map((s: any) => typeof s === 'string' ? { name: s, level: 80 } : s)
             : [{ name: 'JavaScript', level: 80 }]
 
@@ -191,7 +193,7 @@ const ProgrammerDirectory = () => {
             }
           }
         })
-        
+
         setFirestoreProgrammers(converted)
       } catch (error) {
         // Mostrar error en la UI (puedes personalizar esto)
@@ -234,32 +236,32 @@ const ProgrammerDirectory = () => {
     const today = new Date()
     const todayIndex = today.getDay()
     const targetIndex = daysOfWeek.findIndex(day => day.toLowerCase() === dayName.toLowerCase())
-    
+
     if (targetIndex === -1) return dayName
-    
+
     let daysToAdd = targetIndex - todayIndex
     if (daysToAdd <= 0) {
       daysToAdd += 7 // Próxima semana
     }
-    
+
     const targetDate = new Date(today)
     targetDate.setDate(today.getDate() + daysToAdd)
-    
-    return targetDate.toLocaleDateString('es-ES', { 
-      weekday: 'long', 
-      day: 'numeric', 
+
+    return targetDate.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
       month: 'long',
       year: 'numeric'
     })
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFAF6] pt-24 pb-20">
-      {/* Fondo Rosa Dorado */}
+    <div className="min-h-screen bg-base-100 pt-24 pb-20">
+      {/* Fondo Semántico */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FFF5ED]/50 to-transparent" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#FFE8D6]/25 to-transparent" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-[#FFDDD2]/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-secondary/5 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-accent/5 to-transparent" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -268,10 +270,10 @@ const ProgrammerDirectory = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border mb-6" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)', borderColor: 'rgba(212, 175, 55, 0.3)' }}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-primary/20 bg-base-200 mb-6"
           >
-            <Crown className="text-[#D4AF37]" size={18} />
-            <span className="font-medium bg-clip-text text-transparent font-body" style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B)' }}>
+            <Crown className="text-primary" size={18} />
+            <span className="font-medium bg-clip-text text-transparent font-body bg-gradient-to-r from-primary to-secondary">
               Nuestro Equipo
             </span>
           </motion.div>
@@ -280,10 +282,10 @@ const ProgrammerDirectory = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-6xl font-display font-bold mb-6"
+            className="text-5xl sm:text-6xl font-display font-bold mb-6 text-base-content"
           >
             <span className="text-base-content">Las </span>
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B, #D4A574)' }}>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent">
               Creadoras
             </span>
           </motion.h1>
@@ -310,10 +312,10 @@ const ProgrammerDirectory = () => {
               onMouseLeave={() => setHoveredMember(null)}
               className="group"
             >
-              <div className={`relative bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-${member.accentColor}-500/10 border border-${member.accentColor}-100/50 hover:shadow-2xl hover:shadow-${member.accentColor}-500/20 transition-all duration-500`}>
+              <div className={`relative bg-base-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/5 border border-base-content/10 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500`}>
                 {/* Decoración superior */}
                 <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${member.gradient}`} />
-                
+
                 {/* Contenido principal */}
                 <div className="p-8">
                   {/* Header con foto y info básica */}
@@ -321,9 +323,9 @@ const ProgrammerDirectory = () => {
                     {/* Foto */}
                     <div className="relative">
                       <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity`} />
-                      <div className={`relative w-36 h-36 rounded-3xl overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-transform duration-500`}>
-                        <img 
-                          src={member.image} 
+                      <div className={`relative w-36 h-36 rounded-3xl overflow-hidden border-4 border-base-100 shadow-xl group-hover:scale-105 transition-transform duration-500`}>
+                        <img
+                          src={member.image}
                           alt={member.name}
                           className="w-full h-full object-cover"
                         />
@@ -343,14 +345,14 @@ const ProgrammerDirectory = () => {
                         <Flower2 size={16} className={`text-${member.accentColor}-400`} />
                         {member.role}
                       </p>
-                      
+
                       {/* Ubicación y email */}
                       <div className="mt-3 space-y-1">
                         <p className="text-sm text-base-content/50 font-body flex items-center gap-2 justify-center sm:justify-start">
                           <MapPin size={14} className={`text-${member.accentColor}-400`} />
                           {member.location}
                         </p>
-                        <a href={`mailto:${member.email}`} className={`text-sm text-base-content/50 hover:text-${member.accentColor}-500 font-body flex items-center gap-2 justify-center sm:justify-start transition-colors`}>
+                        <a href={`mailto:${member.email}`} className={`text-sm text-base-content/50 hover:text-primary font-body flex items-center gap-2 justify-center sm:justify-start transition-colors`}>
                           <Mail size={14} className={`text-${member.accentColor}-400`} />
                           {member.email}
                         </a>
@@ -359,22 +361,22 @@ const ProgrammerDirectory = () => {
                       {/* Social Links */}
                       <div className="flex items-center gap-2 mt-4 justify-center sm:justify-start">
                         {member.social.instagram && (
-                          <a href={member.social.instagram} className={`p-2.5 rounded-xl bg-gradient-to-r ${member.bgGradient} hover:${member.gradient} text-${member.accentColor}-500 hover:text-white transition-all group/social`}>
+                          <a href={member.social.instagram} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
                             <Instagram size={18} />
                           </a>
                         )}
                         {member.social.linkedin && (
-                          <a href={member.social.linkedin} className={`p-2.5 rounded-xl bg-gradient-to-r ${member.bgGradient} hover:${member.gradient} text-${member.accentColor}-500 hover:text-white transition-all group/social`}>
+                          <a href={member.social.linkedin} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
                             <Linkedin size={18} />
                           </a>
                         )}
                         {member.social.github && (
-                          <a href={member.social.github} className={`p-2.5 rounded-xl bg-gradient-to-r ${member.bgGradient} hover:${member.gradient} text-${member.accentColor}-500 hover:text-white transition-all group/social`}>
+                          <a href={member.social.github} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
                             <Github size={18} />
                           </a>
                         )}
                         {member.social.whatsapp && (
-                          <a href={member.social.whatsapp} target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl bg-gradient-to-r ${member.bgGradient} hover:${member.gradient} text-${member.accentColor}-500 hover:text-white transition-all group/social`}>
+                          <a href={member.social.whatsapp} target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
                             <Phone size={18} />
                           </a>
                         )}
@@ -383,8 +385,8 @@ const ProgrammerDirectory = () => {
                   </div>
 
                   {/* Quote */}
-                  <div className={`relative p-5 rounded-2xl bg-gradient-to-r ${member.bgGradient} mb-6`}>
-                    <Quote className={`absolute top-3 left-3 text-${member.accentColor}-200`} size={24} />
+                  <div className={`relative p-5 rounded-2xl bg-base-200/50 mb-6 border border-base-content/5`}>
+                    <Quote className={`absolute top-3 left-3 text-primary/20`} size={24} />
                     <p className="text-center font-script text-xl text-base-content/80 italic pl-6">
                       {member.quote}
                     </p>
@@ -397,19 +399,19 @@ const ProgrammerDirectory = () => {
 
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className={`text-center p-4 rounded-2xl bg-gradient-to-r ${member.bgGradient}`}>
+                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
                       <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
                         {member.stats.projects}+
                       </p>
                       <p className="text-xs text-base-content/50 font-body">Proyectos</p>
                     </div>
-                    <div className={`text-center p-4 rounded-2xl bg-gradient-to-r ${member.bgGradient}`}>
+                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
                       <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
                         {member.stats.experience}
                       </p>
                       <p className="text-xs text-base-content/50 font-body">Experiencia</p>
                     </div>
-                    <div className={`text-center p-4 rounded-2xl bg-gradient-to-r ${member.bgGradient}`}>
+                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
                       <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
                         {member.stats.clients}+
                       </p>
@@ -446,23 +448,23 @@ const ProgrammerDirectory = () => {
 
                   {/* CTA - Solo visible para el programador dueño de la tarjeta */}
                   {user?.uid === member.id && (
-                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                    <Link
-                      to={`/portafolio/${member.id}`}
-                      className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${member.gradient} text-white font-semibold hover:opacity-90 transition-all shadow-lg font-body`}
-                    >
-                      <Sparkles size={18} />
-                      Ver Mi Portafolio
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
+                    <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                      <Link
+                        to={`/portafolio/${member.id}`}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${member.gradient} text-white font-semibold hover:opacity-90 transition-all shadow-lg font-body`}
+                      >
+                        <Sparkles size={18} />
+                        Ver Mi Portafolio
+                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </div>
                   )}
 
                   {/* Botón para ver horario */}
                   <div className="mt-4">
                     <button
                       onClick={() => openScheduleModal(member)}
-                      className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r ${member.bgGradient} border border-${member.accentColor}-200 text-${member.accentColor}-700 hover:${member.gradient} hover:text-white transition-all shadow-lg font-body font-semibold`}
+                      className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-base-100 border border-primary/20 text-primary hover:bg-gradient-to-r hover:${member.gradient} hover:text-white transition-all shadow-lg font-body font-semibold`}
                     >
                       <Heart size={18} />
                       Ver Horario Disponible
@@ -481,30 +483,32 @@ const ProgrammerDirectory = () => {
           viewport={{ once: true }}
           className="mt-20 text-center"
         >
-          <div className="inline-flex flex-col items-center p-10 rounded-[2rem] border shadow-xl\" style={{ background: 'linear-gradient(to bottom right, #FFF8E7, white, #FFF0D4)', borderColor: 'rgba(212, 175, 55, 0.2)', boxShadow: '0 25px 50px -12px rgba(212, 175, 55, 0.1)' }}>
+          <div className="inline-flex flex-col items-center p-10 rounded-[2rem] border border-primary/20 bg-base-100 shadow-xl shadow-primary/5">
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Heart className="text-[#D4AF37] fill-[#D4AF37]" size={40} />
+              <Heart className="text-primary fill-primary" size={40} />
             </motion.div>
-            
-            <h3 className="text-2xl font-display font-bold mt-4 mb-2">
+
+            <h3 className="text-2xl font-display font-bold mt-4 mb-2 text-base-content">
               ¿Te gustaría trabajar con nosotras?
             </h3>
-            
+
             <p className="text-base-content/60 font-body mb-6 max-w-md">
               Estamos listas para hacer realidad tu próximo proyecto digital ✨
             </p>
-            
-            <Link
-              to="/agendar-asesoria"
-              className="group flex items-center gap-3 px-8 py-4 rounded-full text-white font-bold transition-all font-body" style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B, #D4A574)', boxShadow: '0 20px 25px -5px rgba(212, 175, 55, 0.3)' }}
-            >
-              <Sparkles size={20} />
-              Comencemos tu Proyecto
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </Link>
+
+            {canRequestAdvisory && (
+              <Link
+                to="/agendar-asesoria"
+                className="group flex items-center gap-3 px-8 py-4 rounded-full text-white font-bold transition-all font-body bg-gradient-to-r from-primary via-secondary to-accent shadow-lg hover:shadow-xl hover:shadow-primary/20"
+              >
+                <Sparkles size={20} />
+                Comencemos tu Proyecto
+                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            )}
           </div>
         </motion.div>
       </div>
@@ -530,18 +534,17 @@ const ProgrammerDirectory = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-6 max-h-96 overflow-y-auto">
               {scheduleModal.schedule.length > 0 ? (
                 <div className="space-y-3">
                   {scheduleModal.schedule.map((slot: any, index: number) => (
                     <div
                       key={index}
-                      className={`p-4 rounded-xl border ${
-                        slot.available 
-                          ? 'bg-green-50 border-green-200' 
-                          : 'bg-gray-50 border-gray-200'
-                      }`}
+                      className={`p-4 rounded-xl border ${slot.available
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-gray-50 border-gray-200'
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -550,11 +553,10 @@ const ProgrammerDirectory = () => {
                             {slot.from} - {slot.to}
                           </p>
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          slot.available 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${slot.available
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}>
                           {slot.available ? 'Disponible' : 'No disponible'}
                         </div>
                       </div>
