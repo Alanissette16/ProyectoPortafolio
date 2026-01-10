@@ -121,51 +121,7 @@ const Footer = () => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* CTA Section - Agendar Cita - SOLO para usuarios external autenticados y SOLO en Home */}
-        {(isAuthenticated && role === 'external' && location.pathname === '/') && (
-          <div
-            className="relative mb-16 p-8 sm:p-10 md:p-12 rounded-3xl border border-primary/20 backdrop-blur-md transition-colors duration-300 text-center bg-base-100 shadow-2xl shadow-primary/10"
-          >
-            {/* Badge superior */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-6 border border-primary/30 bg-base-200">
-              <Sparkles className="text-primary" size={14} />
-              <span className="text-[11px] tracking-[0.18em] uppercase font-semibold font-body text-base-content/70">
-                Reserva tu Consulta
-              </span>
-            </div>
-
-            <div className="absolute -top-6 right-4 sm:right-8">
-              <motion.div
-                animate={{ y: [0, -4, 0], rotate: [-4, 4, -4] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="p-3 rounded-2xl bg-base-100 border border-primary/20 shadow-lg shadow-primary/10"
-              >
-                <Flower2 className="text-primary" size={22} />
-              </motion.div>
-            </div>
-
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-4 leading-tight max-w-3xl mx-auto bg-gradient-to-br from-primary via-secondary to-accent bg-clip-text text-transparent">
-              ¿Lista para transformar tu idea en realidad?
-            </h3>
-            <p className="text-base sm:text-lg font-body max-w-2xl mx-auto mb-8 text-base-content/70">
-              Agenda una consulta gratuita de 30 minutos con nuestro equipo. Sin compromisos, solo ideas increíbles.
-            </p>
-
-            <button
-              onClick={() => {
-                if (!isAuthenticated) {
-                  alert('Necesitas iniciar sesión para agendar una asesoría. Por favor, inicia sesión primero.')
-                  return
-                }
-                navigate('/agendar-asesoria')
-              }}
-              className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl text-base sm:text-lg text-primary-content font-bold transition-all font-body hover:scale-105 active:scale-95 cursor-pointer bg-gradient-to-br from-primary to-secondary shadow-xl shadow-primary/30"
-            >
-              <Sparkles size={20} />
-              Agendar Cita
-              <Heart size={20} className="fill-current" />
-            </button>
-          </div>
-        )}
+        {/* CTA Section removed to avoid duplication with Home Hero */}
 
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12 pb-12">
