@@ -226,7 +226,7 @@ const Home = () => {
 
               {canRequestAdvisory && (
                 <Link
-                  to="/agendar-asesoria"
+                  to=""
                   className="btn btn-ghost btn-lg rounded-full px-8 hover:bg-base-200/50 group"
                 >
                   <span className="text-base-content/80 group-hover:text-primary transition-colors">Agendar Cita</span>
