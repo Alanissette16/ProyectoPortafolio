@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
 import { getPhotoURL } from '../../utils/photoStorage'
+import SEOHead from '../../components/common/SEOHead'
 
 // Imágenes del equipo
 import fotoClaudia from '../../assets/images/team/claudia.jpg'
@@ -257,6 +258,7 @@ const ProgrammerDirectory = () => {
 
   return (
     <div className="min-h-screen bg-base-100 pt-24 pb-20">
+      <SEOHead title="Programadoras" description="Conoce a nuestro equipo de talentosas programadoras y diseñadoras." />
       {/* Fondo Semántico */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />

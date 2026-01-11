@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom'
 // import Logo from '../../components/common/Logo' // Keep commented as in original
 import { loginWithGoogle, loginWithEmail, registerWithEmail } from '../../services/auth.service'
 import { FormUtils } from '../../utils/FormUtils'
+import SEOHead from '../../components/common/SEOHead'
 
 // Imagen de fondo
 import logoPremium from '../../assets/images/logos/logo-premium.png'
@@ -112,6 +113,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex bg-base-100 pt-10 text-base-content">
+      <SEOHead title="Iniciar Sesión" description="Accede a tu cuenta e inicia tu viaje creativo con FOREING." />
       {/* Panel izquierdo - Decorativo */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent">
         {/* Decoraciones de fondo */}

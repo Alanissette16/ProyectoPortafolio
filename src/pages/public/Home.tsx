@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import TechMarquee from '../../components/common/TechMarquee'
+import SEOHead from '../../components/common/SEOHead'
 
 // Imágenes del equipo
 import fotoClaudia from '../../assets/images/team/claudia.jpg'
@@ -112,6 +113,7 @@ const Home = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen relative overflow-hidden bg-base-100 selection:bg-primary/20 selection:text-primary">
+      <SEOHead title="Inicio" />
 
       {/* Background Blobs Animados - Optimizado */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

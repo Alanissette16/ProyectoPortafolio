@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { listAllProjects } from '../../services/firestore.service'
+import SEOHead from '../../components/common/SEOHead'
 
 // Interfaz para proyectos
 interface ProjectType {
@@ -223,6 +224,7 @@ const Projects = () => {
 
   return (
     <div className="min-h-screen bg-base-100 pt-24 pb-20">
+      <SEOHead title="Proyectos" description="Explora nuestro portafolio de proyectos de diseño y desarrollo web." />
       {/* Fondo Rosa Dorado Minimalista */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-primary/5 to-transparent" />
