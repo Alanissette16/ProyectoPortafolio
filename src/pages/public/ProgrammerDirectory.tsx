@@ -77,14 +77,14 @@ const ProgrammerDirectory = () => {
     {
       id: 'claudia',
       name: 'Claudia',
-      lastName: 'Rodríguez',
+      lastName: 'Quevedo',
       role: 'Full Stack Developer',
       roleIcon: Code2,
       image: fotoClaudia,
       email: 'claudia@foreing.tech',
       location: 'Cuenca, Ecuador',
       bio: 'Desarrolladora apasionada con más de 5 años de experiencia creando soluciones digitales innovadoras. Especialista en React, Node.js y arquitecturas escalables.',
-      quote: 'El código es poesía que da vida a las ideas ✨',
+      quote: 'El código es poesía que da vida a las ideas',
       skills: [
         { name: 'React', level: 95 },
         { name: 'TypeScript', level: 90 },
@@ -98,7 +98,7 @@ const ProgrammerDirectory = () => {
       accentColor: 'amber',
       social: {
         instagram: 'https://instagram.com/clc__v',
-        linkedin: 'https://linkedin.com/in/claudia-rodriguez',
+        linkedin: 'https://linkedin.com/in/claudia-quevedo',
         github: 'https://github.com/clcmono',
         whatsapp: 'https://wa.me/593999999999'
       },
@@ -118,7 +118,7 @@ const ProgrammerDirectory = () => {
       email: 'valeria@foreing.tech',
       location: 'Cuenca, Ecuador',
       bio: 'Diseñadora creativa especializada en crear experiencias digitales memorables. Combino estética, funcionalidad y emoción en cada proyecto.',
-      quote: 'Diseñar es dar forma a los sueños 💜',
+      quote: 'Diseñar es dar forma a los sueños',
       skills: [
         { name: 'Figma', level: 98 },
         { name: 'Adobe XD', level: 92 },
@@ -176,7 +176,7 @@ const ProgrammerDirectory = () => {
             email: prog.email || '',
             location: prog.location || 'Ecuador',
             bio: prog.bio || '',
-            quote: prog.quote || 'Transformando ideas en código ✨',
+            quote: prog.quote || 'Transformando ideas en código',
             skills: skills.slice(0, 6), // Máximo 6 skills
             ...colorSet,
             accentColor: 'purple',
@@ -296,7 +296,8 @@ const ProgrammerDirectory = () => {
             transition={{ delay: 0.2 }}
             className="text-xl text-base-content/60 max-w-2xl mx-auto font-body"
           >
-            Conoce a las mentes brillantes detrás de FOREING. Dos mujeres apasionadas por la tecnología y el diseño 💖
+            Conoce a las mentes brillantes detrás de FOREING. Dos mujeres apasionadas por la tecnología y el diseño
+            <Heart className="inline ml-2 text-primary fill-primary" size={20} />
           </motion.p>
         </div>
 

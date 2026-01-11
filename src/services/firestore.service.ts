@@ -323,7 +323,20 @@ export const updateAdvisoryStatus = async (
   })
 }
 
-// Horarios
+// ==========================================
+// DEFAULT SCHEDULES (Fallback for static programmers)
+// ==========================================
+
+const createDefaultSlots = (): ScheduleSlot[] => [
+  { day: 'Lunes', from: '09:00', to: '17:00', available: true },
+  { day: 'Martes', from: '09:00', to: '17:00', available: true },
+]
+
+const DEFAULT_SCHEDULES: Record<string, ScheduleSlot[]> = {
+  'claudia': createDefaultSlots(),
+  'valeria': createDefaultSlots(),
+}
+
 export const upsertSchedule = async (programmerId: string, slots: ScheduleSlot[]) => {
   await setDoc(doc(db, collections.schedules, programmerId), {
     programmerId,
@@ -335,5 +348,19 @@ export const upsertSchedule = async (programmerId: string, slots: ScheduleSlot[]
 export const getScheduleByProgrammer = async (programmerId: string) => {
   const ref = doc(db, collections.schedules, programmerId)
   const snap = await getDoc(ref)
-  return snap.exists() ? (snap.data() as DocumentData) : null
+
+  if (snap.exists()) {
+    return snap.data() as DocumentData
+  }
+
+  // Fallback para programadores estáticos
+  if (DEFAULT_SCHEDULES[programmerId]) {
+    return {
+      programmerId,
+      slots: DEFAULT_SCHEDULES[programmerId],
+      isDefault: true
+    }
+  }
+
+  return null
 }

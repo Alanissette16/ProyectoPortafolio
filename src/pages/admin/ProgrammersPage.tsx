@@ -5,7 +5,7 @@
 import type { DocumentData } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
-import { FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiPlus, FiTrash2, FiUser } from 'react-icons/fi'
 import { storage } from '../../services/firebase.config'
 import { deleteProgrammer, listProgrammers, upsertProgrammer } from '../../services/firestore.service'
 import { FormUtils } from '../../utils/FormUtils'
@@ -45,7 +45,7 @@ const ProgrammersPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null)
 
   // Arrays dinámicos para habilidades con niveles
-  const [skills, setSkills] = useState<{name: string, level: number}[]>([
+  const [skills, setSkills] = useState<{ name: string, level: number }[]>([
     { name: 'JavaScript', level: 80 },
     { name: 'React', level: 85 }
   ])
@@ -117,7 +117,7 @@ const ProgrammersPage = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
-    
+
     // Validar el campo en tiempo real si ya fue tocado
     if (touched[name]) {
       const fieldRules = validationRules[name as keyof typeof validationRules]
@@ -133,7 +133,7 @@ const ProgrammersPage = () => {
 
   const handleBlur = (fieldName: string) => {
     setTouched(prev => ({ ...prev, [fieldName]: true }))
-    
+
     // Validar al perder el foco
     const fieldRules = validationRules[fieldName as keyof typeof validationRules]
     if (fieldRules) {
@@ -162,10 +162,10 @@ const ProgrammersPage = () => {
       console.log('📸 Subiendo foto:', file.name, file.type, file.size, 'bytes')
       const storageRef = ref(storage, `programmers/${uid}/profile.jpg`)
       console.log('📁 Referencia Storage:', storageRef.fullPath)
-      
+
       const snapshot = await uploadBytes(storageRef, file)
       console.log('✅ Foto subida exitosamente:', snapshot.metadata.fullPath)
-      
+
       const url = await getDownloadURL(storageRef)
       console.log('🔗 URL obtenida:', url)
       return url
@@ -173,7 +173,7 @@ const ProgrammersPage = () => {
       console.error('❌ Error al subir foto:', error)
       console.error('Código de error:', error.code)
       console.error('Mensaje:', error.message)
-      
+
       if (error.code === 'storage/unauthorized') {
         throw new Error('⚠️ REGLAS DE STORAGE NO APLICADAS. Ve a Firebase Console > Storage > Rules y aplica las reglas.')
       }
@@ -183,37 +183,37 @@ const ProgrammersPage = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
+
     // Marcar todos los campos como tocados
     const allTouched = Object.keys(validationRules).reduce((acc, key) => {
       acc[key] = true
       return acc
     }, {} as { [key: string]: boolean })
     setTouched(allTouched)
-    
+
     // Validar todo el formulario
     const errors = FormUtils.validateForm(form, validationRules)
     setFormErrors(errors)
-    
+
     // Validar arrays dinámicos
     if (skills.length < 2) {
       errors['skills'] = 'Debe tener al menos 2 habilidades'
     }
-    
+
     // Si hay errores, no enviar
     if (FormUtils.hasErrors(errors)) {
       setError('Por favor corrige los errores en el formulario.')
       return
     }
-    
+
     setLoading(true)
     setError('')
     setMessage('')
-    
+
     try {
       // Generar UID automático si es nuevo, o usar el existente si es edición
       const uid = editingId || `prog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      
+
       let photoURL = form.photoURL
 
       // Guardar foto en localStorage (comprimida)
@@ -300,7 +300,7 @@ const ProgrammersPage = () => {
     })
     // Convertir skills al formato correcto
     const loadedSkills = dev.skills || [{ name: 'JavaScript', level: 80 }]
-    setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) => 
+    setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) =>
       typeof s === 'string' ? { name: s, level: 80 } : s
     ) : [{ name: 'JavaScript', level: 80 }])
     setPhotoPreview(getPhotoURL(dev.photoURL))
@@ -311,7 +311,7 @@ const ProgrammersPage = () => {
 
   const handleDelete = async (uid: string, displayName: string) => {
     if (!confirm(`¿Estás seguro de eliminar a ${displayName}?`)) return
-    
+
     try {
       await deleteProgrammer(uid)
       setMessage(`✓ ${displayName} eliminado correctamente.`)
@@ -350,7 +350,7 @@ const ProgrammersPage = () => {
             <h2 className="card-title">{editingId ? 'Editar programador' : 'Nuevo programador'}</h2>
             {message && <div className="alert alert-success text-sm">{message}</div>}
             {error && <div className="alert alert-error text-sm">{error}</div>}
-            
+
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Foto de perfil</span>
@@ -362,7 +362,7 @@ const ProgrammersPage = () => {
                       <img src={photoPreview || getPhotoURL(form.photoURL)} alt="Preview" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-base-300">
-                        <span className="text-3xl">👤</span>
+                        <FiUser className="text-3xl text-base-content/20" />
                       </div>
                     )}
                   </div>
@@ -543,7 +543,7 @@ const ProgrammersPage = () => {
               <label className="label">
                 <span className="label-text font-bold">Habilidades técnicas *</span>
               </label>
-              
+
               {/* Input para agregar nueva habilidad */}
               <div className="flex gap-2 mb-3">
                 <input
@@ -701,9 +701,9 @@ const ProgrammersPage = () => {
 
             <div className="card-actions justify-end gap-2">
               {editingId && (
-                <button 
-                  className="btn btn-ghost" 
-                  type="button" 
+                <button
+                  className="btn btn-ghost"
+                  type="button"
                   onClick={handleCancelEdit}
                 >
                   Cancelar
@@ -732,7 +732,7 @@ const ProgrammersPage = () => {
                           <img src={getPhotoURL(dev.photoURL)} alt={dev.displayName} />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-base-300">
-                            <span className="text-lg">👤</span>
+                            <FiUser className="text-lg text-base-content/20" />
                           </div>
                         )}
                       </div>
@@ -746,7 +746,7 @@ const ProgrammersPage = () => {
                       </div>
                       <p className="text-xs text-base-content/60">{dev.email}</p>
                       <p className="text-sm text-base-content/70">{dev.bio}</p>
-                      
+
                       {/* Habilidades */}
                       {dev.skills && dev.skills.length > 0 && (
                         <div className="mt-2">
@@ -754,20 +754,20 @@ const ProgrammersPage = () => {
                           <div className="flex flex-wrap gap-1">
                             {dev.skills.map((skill: any, idx: number) => (
                               <span key={idx} className="badge badge-primary badge-sm">
-                                {typeof skill === 'string' ? skill : skill.name} 
+                                {typeof skill === 'string' ? skill : skill.name}
                                 {typeof skill !== 'string' && skill.level ? ` ${skill.level}%` : ''}
                               </span>
                             ))}
                           </div>
                         </div>
                       )}
-                      
+
                       {dev.socials && (
                         <div className="mt-2 flex gap-2">
                           {dev.socials.github && (
-                            <a 
-                              href={dev.socials.github} 
-                              target="_blank" 
+                            <a
+                              href={dev.socials.github}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="badge badge-ghost badge-sm"
                             >
@@ -775,9 +775,9 @@ const ProgrammersPage = () => {
                             </a>
                           )}
                           {dev.socials.instagram && (
-                            <a 
-                              href={dev.socials.instagram} 
-                              target="_blank" 
+                            <a
+                              href={dev.socials.instagram}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="badge badge-ghost badge-sm"
                             >
@@ -785,9 +785,9 @@ const ProgrammersPage = () => {
                             </a>
                           )}
                           {dev.socials.whatsapp && (
-                            <a 
-                              href={dev.socials.whatsapp} 
-                              target="_blank" 
+                            <a
+                              href={dev.socials.whatsapp}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="badge badge-ghost badge-sm"
                             >

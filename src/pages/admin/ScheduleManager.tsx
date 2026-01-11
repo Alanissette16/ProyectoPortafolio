@@ -14,20 +14,19 @@ import {
 // Programadores estáticos que deben aparecer en el selector
 const staticProgrammers = [
   {
-    id: 'daniel-static',
-    displayName: 'Daniel',
-    email: 'dquev1@est.ups.edu.ec',
+    id: 'claudia',
+    displayName: 'Claudia Quevedo',
+    email: 'cquev1@est.ups.edu.ec',
     specialty: 'Frontend Developer',
     skills: ['React', 'TypeScript', 'TailwindCSS', 'HTML5', 'CSS3', 'Responsive Design']
   },
-   {
-    id: 'Alanissette-static',
+  {
+    id: 'valeria',
     displayName: 'Alanissette',
     email: 'amantillac3@est.ups.edu.ec',
     specialty: 'Frontend Developer',
     skills: ['React', 'TypeScript', 'TailwindCSS', 'HTML5', 'CSS3', 'Responsive Design']
   }
-
 ]
 
 const defaultSlot: ScheduleSlot = {

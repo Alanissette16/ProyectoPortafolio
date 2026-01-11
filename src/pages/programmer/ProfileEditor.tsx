@@ -4,7 +4,7 @@
 import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { motion } from 'framer-motion'
-import { Briefcase, Camera, Clock, Github, Instagram, Linkedin, MapPin, Phone, Plus, Quote, Save, Sparkles, Users, X } from 'lucide-react'
+import { AlertTriangle, Briefcase, Camera, Clock, Github, Instagram, Linkedin, MapPin, Phone, Plus, Quote, Save, Sparkles, Users, X } from 'lucide-react'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { db, storage } from '../../services/firebase.config'
@@ -35,7 +35,7 @@ const ProfileEditor = () => {
   const [error, setError] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
-  const [skills, setSkills] = useState<{name: string, level: number}[]>([
+  const [skills, setSkills] = useState<{ name: string, level: number }[]>([
     { name: 'JavaScript', level: 80 },
     { name: 'React', level: 85 }
   ])
@@ -68,7 +68,7 @@ const ProfileEditor = () => {
           })
           // Cargar skills con niveles
           const loadedSkills = data.skills || [{ name: 'JavaScript', level: 80 }]
-          setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) => 
+          setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) =>
             typeof s === 'string' ? { name: s, level: 80 } : s
           ) : [{ name: 'JavaScript', level: 80 }])
           // Cargar foto desde localStorage
@@ -112,7 +112,7 @@ const ProfileEditor = () => {
       console.error('❌ Error al subir foto:', error)
       console.error('Código de error:', error.code)
       console.error('Mensaje:', error.message)
-      
+
       if (error.code === 'storage/unauthorized') {
         throw new Error('⚠️ REGLAS DE STORAGE NO APLICADAS. Ve a Firebase Console > Storage > Rules.')
       }
@@ -178,7 +178,7 @@ const ProfileEditor = () => {
       // Actualizar documento en Firestore
       const docRef = doc(db, 'users', user.uid)
       console.log('🔥 Actualizando Firestore documento:', user.uid)
-      
+
       await updateDoc(docRef, {
         displayName: form.displayName,
         lastName: form.lastName,
@@ -207,7 +207,7 @@ const ProfileEditor = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="p-20 space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -224,7 +224,7 @@ const ProfileEditor = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Messages */}
         {message && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 font-body"
@@ -233,7 +233,7 @@ const ProfileEditor = () => {
           </motion.div>
         )}
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 font-body"
@@ -250,9 +250,9 @@ const ProfileEditor = () => {
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-[#D4AF37]/30 ring-offset-2">
-                <img 
-                  src={photoPreview || '/default-avatar.png'} 
-                  alt="Preview" 
+                <img
+                  src={photoPreview || '/default-avatar.png'}
+                  alt="Preview"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -277,7 +277,7 @@ const ProfileEditor = () => {
           </div>
         </div>
 
-          {/* Basic Info Section */}
+        {/* Basic Info Section */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Nombre */}
           <div>
@@ -441,7 +441,7 @@ const ProfileEditor = () => {
           <label className="block text-sm font-semibold text-[#5D4E37] font-body mb-4">
             Habilidades técnicas (mínimo 2)
           </label>
-          
+
           {/* Agregar nueva habilidad */}
           <div className="flex gap-3 mb-4">
             <input
@@ -524,7 +524,7 @@ const ProfileEditor = () => {
             ))}
           </div>
           {skills.length < 2 && (
-            <p className="mt-3 text-sm text-amber-600 font-body">⚠️ Agrega al menos 2 habilidades</p>
+            <p className="mt-3 text-sm text-amber-600 font-body flex items-center gap-1"><AlertTriangle size={16} /> Agrega al menos 2 habilidades</p>
           )}
         </div>
 
@@ -594,10 +594,10 @@ const ProfileEditor = () => {
 
         {/* Submit Button */}
         <div className="flex justify-end pt-4">
-          <button 
+          <button
             className="px-8 py-3 rounded-xl text-white font-semibold font-body flex items-center gap-2 hover:scale-105 transition-transform shadow-lg disabled:opacity-50 disabled:hover:scale-100"
             style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)', boxShadow: '0 8px 30px rgba(212, 175, 55, 0.3)' }}
-            type="submit" 
+            type="submit"
             disabled={loading}
           >
             <Save size={18} />

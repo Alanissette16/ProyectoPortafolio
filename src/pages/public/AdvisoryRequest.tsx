@@ -6,6 +6,7 @@
 import { motion } from 'framer-motion'
 import {
   ArrowRight,
+  AlertTriangle,
   Calendar,
   CheckCircle,
   Clock,
@@ -251,7 +252,7 @@ const AdvisoryRequest = () => {
           </motion.div>
 
           <h2 className="text-3xl font-display font-bold text-base-content mb-4">
-            ¡Solicitud Enviada! 💖
+            ¡Solicitud Enviada! <Heart className="inline ml-2 text-primary fill-primary" size={24} />
           </h2>
 
           <p className="text-base-content/60 font-body mb-8">
@@ -313,7 +314,7 @@ const AdvisoryRequest = () => {
             transition={{ delay: 0.3 }}
             className="text-3xl font-display font-bold text-base-content mb-4"
           >
-            ¡Hola! 👋
+            ¡Hola! <Sparkles className="inline-block ml-2 text-[#D4AF37]" size={32} />
           </motion.h2>
 
           <motion.p
@@ -325,7 +326,7 @@ const AdvisoryRequest = () => {
             Para solicitar una asesoría necesitas{' '}
             <span className="font-semibold text-[#D4AF37]">iniciar sesión</span>.
             <br />
-            Es rápido, seguro y gratuito ✨
+            Es rápido, seguro y gratuito <Sparkles className="inline text-[#D4AF37]" size={16} />
           </motion.p>
 
           <motion.div
@@ -412,7 +413,8 @@ const AdvisoryRequest = () => {
             transition={{ delay: 0.2 }}
             className="text-xl text-base-content/60 max-w-2xl mx-auto font-body"
           >
-            Agenda una consulta gratuita de 30 minutos con nuestro equipo ✨
+            Agenda una consulta gratuita de 30 minutos con nuestro equipo
+            <Sparkles className="inline ml-2 text-[#D4AF37]" size={20} />
           </motion.p>
         </div>
 
@@ -543,9 +545,9 @@ const AdvisoryRequest = () => {
                   {availabilityChecked && selectedAdvisor && selectedDate && selectedTime && !isSlotAvailable && (
                     <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200">
                       <div className="flex items-center gap-2 text-red-800">
-                        <Heart className="text-red-500" size={16} />
+                        <AlertTriangle className="text-red-500" size={16} />
                         <span className="text-sm font-medium">
-                          ⚠️ Este horario no está disponible para {advisors.find(a => a.id === selectedAdvisor)?.name}
+                          Este horario no está disponible para {advisors.find(a => a.id === selectedAdvisor)?.name}
                         </span>
                       </div>
                       <p className="text-xs text-red-600 mt-1">
@@ -577,8 +579,8 @@ const AdvisoryRequest = () => {
                     required
                     placeholder="Tu nombre"
                     className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.name
-                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
                       }`}
                   />
                   {formErrors.name && (
@@ -598,8 +600,8 @@ const AdvisoryRequest = () => {
                     required
                     placeholder="tu@email.com"
                     className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.email
-                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
                       }`}
                   />
                   {formErrors.email && (
@@ -618,8 +620,8 @@ const AdvisoryRequest = () => {
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+593 99 1234 567"
                     className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body ${formErrors.phone
-                        ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-                        : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
                       }`}
                   />
                   {formErrors.phone && (
@@ -654,8 +656,8 @@ const AdvisoryRequest = () => {
                   required
                   placeholder="Describe brevemente tu proyecto o las preguntas que tienes..."
                   className={`w-full px-5 py-4 rounded-2xl bg-white border-2 focus:ring-4 outline-none transition-all font-body resize-none ${formErrors.message
-                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-                      : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
+                    ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                    : 'border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/10'
                     }`}
                 />
                 {formErrors.message && (

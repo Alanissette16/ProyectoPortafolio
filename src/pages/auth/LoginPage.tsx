@@ -1,6 +1,7 @@
 /**
  * LoginPage FOREING - Página de inicio de sesión con estilo femenino
  * Versión refinada: diseño más elegante, suave y “premium”
+ * Ahora adaptable a temas (Rosegold, Lavender, Rosepink)
  */
 
 import { motion } from 'framer-motion'
@@ -14,12 +15,13 @@ import {
   Mail,
   Sparkles,
   Star,
-  User
+  User,
+  AlertTriangle
 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Logo from '../../components/common/Logo'
-import { loginWithEmail, loginWithGoogle, registerWithEmail } from '../../services/auth.service'
+// import Logo from '../../components/common/Logo' // Keep commented as in original
+import { loginWithGoogle, loginWithEmail, registerWithEmail } from '../../services/auth.service'
 import { FormUtils } from '../../utils/FormUtils'
 
 // Imagen de fondo
@@ -89,19 +91,19 @@ const LoginPage = () => {
     } catch (err: any) {
       // Mensajes de error amigables
       if (err.code === 'auth/user-not-found') {
-        setError('No existe una cuenta con este email. ¿Quieres registrarte? 💖')
+        setError('No existe una cuenta con este email. ¿Quieres registrarte?')
       } else if (err.code === 'auth/wrong-password') {
-        setError('Contraseña incorrecta. Inténtalo de nuevo 💖')
+        setError('Contraseña incorrecta. Inténtalo de nuevo.')
       } else if (err.code === 'auth/email-already-in-use') {
-        setError('Este email ya está registrado. Intenta iniciar sesión 💖')
+        setError('Este email ya está registrado. Intenta iniciar sesión.')
       } else if (err.code === 'auth/invalid-email') {
-        setError('El formato del email no es válido 💖')
+        setError('El formato del email no es válido.')
       } else if (err.code === 'auth/weak-password') {
-        setError('La contraseña es muy débil. Usa al menos 6 caracteres 💖')
+        setError('La contraseña es muy débil. Usa al menos 6 caracteres.')
       } else if (err.code === 'auth/invalid-credential') {
-        setError('Credenciales inválidas. Verifica tu email y contraseña 💖')
+        setError('Credenciales inválidas. Verifica tu email y contraseña.')
       } else {
-        setError('Error al procesar la solicitud. Inténtalo de nuevo 💖')
+        setError('Error al procesar la solicitud. Inténtalo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -109,21 +111,18 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#FFF9F4] via-[#FFF4E7] to-[#FFE7C7] pt-10">
+    <div className="min-h-screen flex bg-base-100 pt-10 text-base-content">
       {/* Panel izquierdo - Decorativo */}
-      <div
-        className="hidden lg:flex lg:w-1/2 relative overflow-hidden"
-        style={{ background: 'linear-gradient(to bottom right, #D4AF37, #B8860B, #D4A574)' }}
-      >
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary via-secondary to-accent">
         {/* Decoraciones de fondo */}
         <div className="absolute inset-0">
-          <div className="absolute top-16 left-12 w-64 h-64 bg-white/12 rounded-full blur-3xl" />
+          <div className="absolute top-16 left-12 w-64 h-64 bg-white/20 rounded-full blur-3xl" />
           <div className="absolute bottom-24 right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] border border-white/10 rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] border border-white/20 rounded-full" />
           <img
             src={logoPremium}
             alt="FOREING emblem"
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 w-72 h-72 object-contain opacity-15"
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 w-72 h-72 object-contain opacity-20 mix-blend-overlay"
           />
         </div>
 
@@ -150,7 +149,7 @@ const LoginPage = () => {
         ))}
 
         {/* Contenido */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-white">
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-primary-content">
           {/* Logo clickeable para login secreto */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
@@ -183,11 +182,11 @@ const LoginPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="text-lg text-white/85 font-body text-center max-w-md mb-10"
+            className="text-lg text-primary-content/90 font-body text-center max-w-md mb-10"
           >
             Creative Tech Studio ✨
-            <span className="block text-sm text-white/70 mt-3">
-              Diseño, desarrollo y experiencias digitales con esencia dorada.
+            <span className="block text-sm text-primary-content/80 mt-3">
+              Diseño, desarrollo y experiencias digitales con esencia única.
             </span>
           </motion.p>
 
@@ -199,27 +198,24 @@ const LoginPage = () => {
           >
             <div className="flex -space-x-3">
               <div
-                className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center shadow-md"
-                style={{ background: 'linear-gradient(to right, #D4AF37, #D4A574)' }}
+                className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center shadow-md bg-white/20 backdrop-blur-sm"
               >
-                <Flower2 size={20} />
+                <Flower2 size={20} className="text-white" />
               </div>
               <div
-                className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center shadow-md"
-                style={{ background: 'linear-gradient(to right, #B8860B, #D4AF37)' }}
+                className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center shadow-md bg-white/20 backdrop-blur-sm"
               >
-                <Star size={20} />
+                <Star size={20} className="text-white" />
               </div>
               <div
-                className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center shadow-md"
-                style={{ background: 'linear-gradient(to right, #D4A574, #D4AF37)' }}
+                className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center shadow-md bg-white/20 backdrop-blur-sm"
               >
-                <Heart size={20} />
+                <Heart size={20} className="text-white" />
               </div>
             </div>
-            <p className="text-white/85 font-body text-sm">
+            <p className="text-primary-content/90 font-body text-sm">
               Únete a una experiencia digital
-              <span className="block text-white/70 text-xs">cuidada, femenina y sofisticada.</span>
+              <span className="block text-primary-content/75 text-xs">cuidada, femenina y sofisticada.</span>
             </p>
           </motion.div>
 
@@ -229,35 +225,32 @@ const LoginPage = () => {
             transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center"
           >
-            <p className="text-white/65 text-xs font-body flex items-center gap-2">
-              <span className="w-8 h-[1px] bg-white/35" />
+            <p className="text-primary-content/70 text-xs font-body flex items-center gap-2">
+              <span className="w-8 h-[1px] bg-primary-content/40" />
               Diseño y desarrollo con amor
-              <span className="w-8 h-[1px] bg-white/35" />
+              <span className="w-8 h-[1px] bg-primary-content/40" />
             </p>
           </motion.div>
         </div>
       </div>
 
       {/* Panel derecho - Formulario */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 bg-base-100">
         <div className="w-full max-w-md relative">
           {/* Brillito decorativo detrás del card */}
-          <div className="absolute -top-10 -right-6 w-40 h-40 bg-[#D4AF37]/20 blur-3xl rounded-full pointer-events-none" />
-          <div className="absolute bottom-0 -left-10 w-40 h-40 bg-[#FFE7C7]/60 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute -top-10 -right-6 w-40 h-40 bg-primary/20 blur-3xl rounded-full pointer-events-none" />
+          <div className="absolute bottom-0 -left-10 w-40 h-40 bg-secondary/20 blur-3xl rounded-full pointer-events-none" />
 
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55 }}
-            className="relative rounded-[2rem] bg-white/90 backdrop-blur-xl border border-[#D4AF37]/18 shadow-[0_20px_55px_rgba(212,175,55,0.18)] p-6 sm:p-8"
+            className="relative rounded-[2rem] bg-base-100/80 backdrop-blur-xl border border-primary/20 shadow-xl p-6 sm:p-8"
           >
             {/* Logo móvil */}
             <div className="lg:hidden flex flex-col items-center mb-6">
               {/* <Logo size={80} enableSecretLogin={true} /> */}
-              <h1
-                className="text-3xl font-display font-bold mt-4 bg-clip-text text-transparent tracking-[0.14em] uppercase"
-                style={{ backgroundImage: 'linear-gradient(to right, #D4AF37, #B8860B)' }}
-              >
+              <h1 className="text-3xl font-display font-bold mt-4 text-primary tracking-[0.14em] uppercase">
                 Foreing
               </h1>
             </div>
@@ -265,20 +258,19 @@ const LoginPage = () => {
             {/* Header */}
             <div className="text-center mb-8">
               <div
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 border border-[#D4AF37]/30"
-                style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF2D9)' }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 border border-primary/20 bg-primary/5"
               >
-                <Heart className="text-[#D4AF37] fill-[#D4AF37]" size={14} />
-                <span className="text-xs sm:text-sm font-medium text-[#B8860B] font-body">
+                <Heart className="text-primary fill-primary" size={14} />
+                <span className="text-xs sm:text-sm font-medium text-primary font-body">
                   {isRegisterMode ? 'Crea tu cuenta' : 'Bienvenida de nuevo'}
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-display font-bold text-[#3D3321] mb-2">
+              <h2 className="text-2xl sm:text-3xl font-display font-bold text-base-content mb-2">
                 {isRegisterMode ? 'Registrarse' : 'Iniciar sesión'}
               </h2>
 
-              <p className="text-xs sm:text-sm text-[#7C6A4A] font-body">
+              <p className="text-xs sm:text-sm text-base-content/70 font-body">
                 {isRegisterMode
                   ? 'Únete a FOREING y comienza tu viaje creativo ✨'
                   : 'Accede a tu espacio creativo y continúa donde lo dejaste ✨'}
@@ -290,9 +282,9 @@ const LoginPage = () => {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-xs sm:text-sm font-body flex items-center gap-2"
+                className="mb-5 p-3.5 rounded-2xl bg-error/10 border border-error/20 text-error text-xs sm:text-sm font-body flex items-center gap-2"
               >
-                <span>⚠️</span>
+                <AlertTriangle size={18} className="shrink-0" />
                 {error}
               </motion.div>
             )}
@@ -304,7 +296,7 @@ const LoginPage = () => {
               transition={{ delay: 0.08 }}
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-white border-2 border-[#D4AF37]/22 hover:border-[#D4AF37]/45 transition-all duration-300 shadow-[0_10px_22px_rgba(212,175,55,0.15)] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-base-100 border-2 border-base-300 hover:border-primary/50 transition-all duration-300 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed text-base-content"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -312,7 +304,7 @@ const LoginPage = () => {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
-              <span className="font-semibold text-sm sm:text-base text-[#3D3321] font-body">
+              <span className="font-semibold text-sm sm:text-base font-body">
                 {loading ? 'Conectando...' : 'Continuar con Google'}
               </span>
             </motion.button>
@@ -320,13 +312,13 @@ const LoginPage = () => {
             {/* Divider */}
             <div className="relative my-7 sm:my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#D4AF37]/20" />
+                <div className="w-full border-t border-base-300" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-white/95 text-[11px] sm:text-xs text-[#8D7A53] font-body flex items-center gap-2 rounded-full border border-[#D4AF37]/15">
-                  <Sparkles size={12} className="text-[#D4AF37]" />
+                <span className="px-4 bg-base-100 text-[11px] sm:text-xs text-base-content/60 font-body flex items-center gap-2 rounded-full border border-base-300">
+                  <Sparkles size={12} className="text-secondary" />
                   o continúa con tu email
-                  <Sparkles size={12} className="text-[#B8860B]" />
+                  <Sparkles size={12} className="text-primary" />
                 </span>
               </div>
             </div>
@@ -341,45 +333,47 @@ const LoginPage = () => {
             >
               {/* Name Input - Solo en modo registro */}
               {isRegisterMode && (
-                <div className="space-y-1.5">
-                  <label className="text-xs sm:text-sm font-medium text-[#5D4C30] font-body flex items-center gap-2">
-                    <User size={14} className="text-[#D4AF37]" />
-                    Nombre completo
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text flex items-center gap-2 font-medium text-base-content/80">
+                      <User size={14} className="text-primary" />
+                      Nombre completo
+                    </span>
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="Tu nombre"
-                      className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/55 focus:ring-4 focus:ring-[#D4AF37]/12 outline-none transition-all font-body text-sm sm:text-base"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Tu nombre"
+                    className="input input-bordered w-full focus:input-primary bg-base-100"
+                  />
                 </div>
               )}
 
               {/* Email Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-medium text-[#5D4C30] font-body flex items-center gap-2">
-                  <Mail size={14} className="text-[#D4AF37]" />
-                  Email
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2 font-medium text-base-content/80">
+                    <Mail size={14} className="text-primary" />
+                    Email
+                  </span>
                 </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@email.com"
-                    className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/55 focus:ring-4 focus:ring-[#D4AF37]/12 outline-none transition-all font-body text-sm sm:text-base"
-                  />
-                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  className="input input-bordered w-full focus:input-primary bg-base-100"
+                />
               </div>
 
               {/* Password Input */}
-              <div className="space-y-1.5">
-                <label className="text-xs sm:text-sm font-medium text-[#5D4C30] font-body flex items-center gap-2">
-                  <Lock size={14} className="text-[#B8860B]" />
-                  Contraseña
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2 font-medium text-base-content/80">
+                    <Lock size={14} className="text-secondary" />
+                    Contraseña
+                  </span>
                 </label>
                 <div className="relative">
                   <input
@@ -387,12 +381,12 @@ const LoginPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/55 focus:ring-4 focus:ring-[#D4AF37]/12 outline-none transition-all font-body pr-11 text-sm sm:text-base"
+                    className="input input-bordered w-full focus:input-primary bg-base-100 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B2A079] hover:text-[#D4AF37] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -404,7 +398,7 @@ const LoginPage = () => {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    className="text-xs sm:text-sm text-[#D4AF37] hover:text-[#B8860B] font-medium font-body"
+                    className="text-xs sm:text-sm text-primary hover:text-primary-focus font-medium font-body transition-colors"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
@@ -415,14 +409,10 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="group w-full flex items-center justify-center gap-3 p-3.5 sm:p-4 rounded-2xl text-white font-bold transition-all duration-300 shadow-[0_20px_30px_rgba(212,175,55,0.35)] font-body disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ background: 'linear-gradient(to right, #D4AF37, #B8860B, #D4A574)' }}
+                className="btn btn-primary w-full rounded-2xl text-primary-content font-bold shadow-lg shadow-primary/30"
               >
                 {loading ? 'Procesando...' : (isRegisterMode ? 'Crear cuenta' : 'Iniciar sesión')}
-                <ArrowRight
-                  size={20}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
+                {!loading && <ArrowRight size={20} />}
               </button>
             </motion.form>
 
@@ -433,7 +423,7 @@ const LoginPage = () => {
               transition={{ delay: 0.28 }}
               className="mt-7 sm:mt-8"
             >
-              <p className="text-center text-[11px] sm:text-sm text-[#8F7A51] font-body">
+              <p className="text-center text-[11px] sm:text-sm text-base-content/70 font-body">
                 {isRegisterMode ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}{' '}
                 <button
                   type="button"
@@ -442,18 +432,18 @@ const LoginPage = () => {
                     setError('')
                     setDisplayName('')
                   }}
-                  className="text-[#D4AF37] hover:text-[#B8860B] font-semibold underline-offset-4 hover:underline"
+                  className="text-primary hover:text-primary-focus font-semibold underline-offset-4 hover:underline transition-colors"
                 >
                   {isRegisterMode ? 'Inicia sesión' : 'Regístrate gratis'}
                 </button>
               </p>
 
               <div className="flex items-center justify-center gap-3 mt-5">
-                <Heart size={15} className="text-[#D4AF37] fill-[#D4AF37]" />
-                <span className="text-[10px] sm:text-xs text-[#B49A69] font-body tracking-[0.18em] uppercase">
+                <Heart size={15} className="text-primary fill-primary" />
+                <span className="text-[10px] sm:text-xs text-base-content/50 font-body tracking-[0.18em] uppercase">
                   Hecho con amor por FOREING
                 </span>
-                <Heart size={15} className="text-[#D4AF37] fill-[#D4AF37]" />
+                <Heart size={15} className="text-primary fill-primary" />
               </div>
             </motion.div>
           </motion.div>
