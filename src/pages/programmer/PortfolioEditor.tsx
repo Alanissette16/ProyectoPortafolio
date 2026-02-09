@@ -42,7 +42,12 @@ const PortfolioEditor = () => {
             const skillsArray = typeof data.skills === 'string'
               ? JSON.parse(data.skills)
               : data.skills
-            skillsStr = Array.isArray(skillsArray) ? skillsArray.join(', ') : ''
+
+            if (Array.isArray(skillsArray)) {
+              skillsStr = skillsArray.map(s => typeof s === 'object' ? (s.name || s.label || '') : s).join(', ')
+            } else {
+              skillsStr = data.skills || ''
+            }
           }
         } catch {
           skillsStr = data.skills || ''
@@ -53,7 +58,12 @@ const PortfolioEditor = () => {
             const tagsArray = typeof data.tags === 'string'
               ? JSON.parse(data.tags)
               : data.tags
-            tagsStr = Array.isArray(tagsArray) ? tagsArray.join(', ') : ''
+
+            if (Array.isArray(tagsArray)) {
+              tagsStr = tagsArray.map(t => typeof t === 'object' ? (t.name || t.label || '') : t).join(', ')
+            } else {
+              tagsStr = data.tags || ''
+            }
           }
         } catch {
           tagsStr = data.tags || ''
