@@ -164,6 +164,36 @@ La aplicación estará disponible en:
 
 ---
 
+## Deployment
+
+### Backend en Producción
+
+El backend está desplegado en Render y disponible en:
+
+**URL Base:** `https://backend-portafolio-4bz1.onrender.com`
+
+**Endpoints de API:**
+```
+https://backend-portafolio-4bz1.onrender.com/api/auth/login
+https://backend-portafolio-4bz1.onrender.com/api/usuarios
+https://backend-portafolio-4bz1.onrender.com/api/proyectos
+https://backend-portafolio-4bz1.onrender.com/api/asesorias
+https://backend-portafolio-4bz1.onrender.com/api/horarios
+```
+
+### Configuración para Conectar al Backend en Producción
+
+Para conectar el frontend al backend desplegado, configura la variable de entorno:
+
+```bash
+# .env
+VITE_API_URL=https://backend-portafolio-4bz1.onrender.com/api
+```
+
+**Nota:** El backend en Render puede tardar ~30 segundos en responder la primera petición si está en modo sleep.
+
+---
+
 ## Roles y Permisos
 
 | Rol | Acceso | Rutas Disponibles |
