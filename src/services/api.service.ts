@@ -1,7 +1,7 @@
 
 
-//URL base de la API
-const API_URL = '/api';
+//URL base de la API - Lee desde variable de entorno (.env)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 //cliente HTTP para realizar peticiones al backend
 export const api = {
