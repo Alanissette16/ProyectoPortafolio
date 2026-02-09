@@ -1,4 +1,4 @@
-import type { ScheduleSlot } from '../services/firestore.service'
+import type { ScheduleSlot } from '../services/data.service'
 
 /**
  * Verifica si un programador está disponible ahora mismo
@@ -94,9 +94,9 @@ export const isProgrammerAvailableAtSlot = (slots: ScheduleSlot[], date: string,
     return slotDayNormalized === normalizedDay
   })
 
-  // Si no hay slots configurados para este día, está disponible
+  // Si no hay slots configurados para este día, NO está disponible
   if (daySlots.length === 0) {
-    return true
+    return false
   }
 
   // Filtrar solo los slots que están marcados como disponibles
@@ -107,12 +107,25 @@ export const isProgrammerAvailableAtSlot = (slots: ScheduleSlot[], date: string,
     return false
   }
 
-  // Verificar si la hora seleccionada está dentro de algún slot disponible
+  // Verificar si la hora seleccionada (+30 min) está dentro de algún slot disponible
   const isTimeAvailable = availableSlots.some(slot => {
-    return time >= slot.from && time <= slot.to
+    const slotStart = timeToMinutes(slot.from)
+    const slotEnd = timeToMinutes(slot.to)
+    const requestStart = timeToMinutes(time)
+    const requestEnd = requestStart + 30 // Asumimos 30 min de duración
+
+    return requestStart >= slotStart && requestEnd <= slotEnd
   })
 
   return isTimeAvailable
+}
+
+/**
+ * Convierte una hora en formato HH:MM a minutos desde el inicio del día
+ */
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
 }
 
 /**
@@ -136,4 +149,24 @@ const normalizeDayName = (dayName: string): string => {
 
   const lowerCase = dayName.toLowerCase().trim()
   return dayMappings[lowerCase] || dayName
+}
+
+/**
+ * Verifica si un programador trabaja en una fecha específica (sin importar la hora)
+ */
+export const isProgrammerAvailableOnDate = (slots: ScheduleSlot[], date: string): boolean => {
+  if (!slots || slots.length === 0) return true
+
+  const selectedDate = new Date(date + 'T00:00:00')
+  if (isNaN(selectedDate.getTime())) return false
+
+  const dayOfWeek = selectedDate.toLocaleDateString('es-ES', { weekday: 'long' })
+  const normalizedDay = normalizeDayName(dayOfWeek)
+
+  const daySlots = slots.filter(slot => {
+    const slotDayNormalized = normalizeDayName(slot.day)
+    return slotDayNormalized === normalizedDay && slot.available
+  })
+
+  return daySlots.length > 0
 }

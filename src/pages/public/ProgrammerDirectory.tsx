@@ -23,13 +23,10 @@ import {
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
+import { getScheduleByProgrammer, listProgrammers } from '../../services/data.service'
 import { getPhotoURL } from '../../utils/photoStorage'
 import SEOHead from '../../components/common/SEOHead'
 
-// Imágenes del equipo
-import fotoClaudia from '../../assets/images/team/claudia.jpg'
-import fotoValeria from '../../assets/images/team/valeria.jpg'
 
 // Tipo para miembros del equipo
 interface TeamMember {
@@ -64,9 +61,7 @@ const ProgrammerDirectory = () => {
   const { user, role, isAuthenticated } = useAuth()
 
   const canRequestAdvisory = !isAuthenticated || (role !== 'admin' && role !== 'programmer')
-  const [hoveredMember, setHoveredMember] = useState<string | null>(null)
-  const [firestoreProgrammers, setFirestoreProgrammers] = useState<TeamMember[]>([])
-  const [loading, setLoading] = useState(true)
+  const [backendProgrammers, setBackendProgrammers] = useState<TeamMember[]>([])
   const [scheduleModal, setScheduleModal] = useState<{ open: boolean; member: TeamMember | null; schedule: any[] }>({
     open: false,
     member: null,
@@ -74,78 +69,9 @@ const ProgrammerDirectory = () => {
   })
 
   // Equipo principal (fundadoras)
-  const founders: TeamMember[] = [
-    {
-      id: 'claudia',
-      name: 'Claudia',
-      lastName: 'Quevedo',
-      role: 'Full Stack Developer',
-      roleIcon: Code2,
-      image: fotoClaudia,
-      email: 'claudia@foreing.tech',
-      location: 'Cuenca, Ecuador',
-      bio: 'Desarrolladora apasionada con más de 5 años de experiencia creando soluciones digitales innovadoras. Especialista en React, Node.js y arquitecturas escalables.',
-      quote: 'El código es poesía que da vida a las ideas',
-      skills: [
-        { name: 'React', level: 95 },
-        { name: 'TypeScript', level: 90 },
-        { name: 'Node.js', level: 88 },
-        { name: 'Firebase', level: 92 },
-        { name: 'TailwindCSS', level: 95 },
-        { name: 'Python', level: 80 }
-      ],
-      gradient: 'from-[#D4AF37] to-[#B8860B]',
-      bgGradient: 'from-[#FFF8E7] to-[#FFF0D4]',
-      accentColor: 'amber',
-      social: {
-        instagram: 'https://instagram.com/clc__v',
-        linkedin: 'https://linkedin.com/in/claudia-quevedo',
-        github: 'https://github.com/clcmono',
-        whatsapp: 'https://wa.me/593999999999'
-      },
-      stats: {
-        projects: 45,
-        experience: '5 años',
-        clients: 30
-      }
-    },
-    {
-      id: 'valeria',
-      name: 'Valeria',
-      lastName: 'Mantilla',
-      role: 'UI/UX Designer',
-      roleIcon: Palette,
-      image: fotoValeria,
-      email: 'valeria@foreing.tech',
-      location: 'Cuenca, Ecuador',
-      bio: 'Diseñadora creativa especializada en crear experiencias digitales memorables. Combino estética, funcionalidad y emoción en cada proyecto.',
-      quote: 'Diseñar es dar forma a los sueños',
-      skills: [
-        { name: 'Figma', level: 98 },
-        { name: 'Adobe XD', level: 92 },
-        { name: 'Illustrator', level: 95 },
-        { name: 'Photoshop', level: 90 },
-        { name: 'After Effects', level: 85 },
-        { name: 'Branding', level: 93 }
-      ],
-      gradient: 'from-[#D4A574] to-[#D4AF37]',
-      bgGradient: 'from-[#FFFAF0] to-[#FFF5E6]',
-      accentColor: 'amber',
-      social: {
-        instagram: 'https://instagram.com/valeria_foreing',
-        linkedin: 'https://linkedin.com/in/valeria-mantilla',
-        github: 'https://github.com/Alanissette16',
-        whatsapp: 'https://wa.me/593999999998'
-      },
-      stats: {
-        projects: 60,
-        experience: '6 años',
-        clients: 40
-      }
-    }
-  ]
+  const founders: TeamMember[] = []
 
-  // Cargar programadores de Firestore
+  // Cargar programadores del Backend
   useEffect(() => {
     const loadProgrammers = async () => {
       try {
@@ -162,9 +88,23 @@ const ProgrammerDirectory = () => {
           ]
           const colorSet = gradients[index % gradients.length]
 
-          // Convertir skills al formato correcto
-          const skills = Array.isArray(prog.skills)
-            ? prog.skills.map((s: any) => typeof s === 'string' ? { name: s, level: 80 } : s)
+          // Helper to safely parse JSON
+          const safeParse = (str: string | any, fallback: any) => {
+            if (typeof str !== 'string') return str || fallback;
+            try {
+              return JSON.parse(str);
+            } catch {
+              return fallback;
+            }
+          };
+
+          const parsedSkills = safeParse(prog.skills, [{ name: 'JavaScript', level: 80 }]);
+          const parsedSocials = safeParse(prog.socials, {});
+          const parsedStats = safeParse(prog.stats, {});
+
+          // Convertir skills al formato correcto si es necesario
+          const skills = Array.isArray(parsedSkills)
+            ? parsedSkills.map((s: any) => typeof s === 'string' ? { name: s, level: 80 } : s)
             : [{ name: 'JavaScript', level: 80 }]
 
           return {
@@ -182,33 +122,31 @@ const ProgrammerDirectory = () => {
             ...colorSet,
             accentColor: 'purple',
             social: {
-              instagram: prog.socials?.instagram || '',
-              linkedin: prog.socials?.linkedin || '',
-              github: prog.socials?.github || '',
-              whatsapp: prog.socials?.whatsapp || ''
+              instagram: parsedSocials.instagram || '',
+              linkedin: parsedSocials.linkedin || '',
+              github: parsedSocials.github || '',
+              whatsapp: parsedSocials.whatsapp || ''
             },
             stats: {
-              projects: prog.stats?.projects || 0,
-              experience: prog.stats?.experience || '1 año',
-              clients: prog.stats?.clients || 0
+              projects: parsedStats.projects || 0,
+              experience: parsedStats.experience || '1 año',
+              clients: parsedStats.clients || 0
             }
           }
         })
 
-        setFirestoreProgrammers(converted)
-      } catch (error) {
+        setBackendProgrammers(converted)
+      } catch {
         // Mostrar error en la UI (puedes personalizar esto)
         alert('Error cargando programadores. Por favor, recarga la página.')
-      } finally {
-        setLoading(false)
       }
     }
 
     loadProgrammers()
   }, [])
 
-  // Combinar fundadoras + programadores de Firestore
-  const team = [...founders, ...firestoreProgrammers]
+  // Combinar fundadoras + programadores del Backend
+  const team = [...founders, ...backendProgrammers]
 
   const openScheduleModal = async (member: TeamMember) => {
     try {
@@ -218,7 +156,7 @@ const ProgrammerDirectory = () => {
         member,
         schedule: schedule?.slots || []
       })
-    } catch (error) {
+    } catch {
       setScheduleModal({
         open: true,
         member,
@@ -311,8 +249,6 @@ const ProgrammerDirectory = () => {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.2 + 0.3 }}
-              onMouseEnter={() => setHoveredMember(member.id)}
-              onMouseLeave={() => setHoveredMember(null)}
               className="group"
             >
               <div className={`relative bg-base-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/5 border border-base-content/10 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500`}>

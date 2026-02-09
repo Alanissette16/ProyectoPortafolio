@@ -1,8 +1,3 @@
-/**
- * Bandeja de asesorías del programador.
- * Prácticas: Consumo Firestore, manejo de estados, feedback profesional.
- */
-import { collection, getDocs, query, where } from 'firebase/firestore'
 import { motion } from 'framer-motion'
 import {
   Calendar,
@@ -14,12 +9,19 @@ import {
   MessageSquare,
   RefreshCw,
   User,
-  XCircle
+  XCircle,
+  Download
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db } from '../../services/firebase.config'
-import { updateAdvisoryStatus } from '../../services/firestore.service'
+import { listAdvisoriesByProgrammer, updateAdvisoryStatus } from '../../services/data.service'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+
+// Extend jsPDF for autotable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDF;
+}
 
 interface Advisory {
   id: string
@@ -67,32 +69,11 @@ const AdvisoryInbox = () => {
     setLoading(true)
     setError('')
     try {
-      const advisoriesRef = collection(db, 'advisories')
-      const q = query(advisoriesRef, where('programmerId', '==', user?.uid))
-      const snap = await getDocs(q)
-
-      if (snap.empty) {
-        setItems([])
-        setLoading(false)
-        return
-      }
-
-      const data: Advisory[] = snap.docs.map((d) => {
-        return {
-          id: d.id,
-          ...d.data()
-        } as Advisory
-      })
-
-      // Ordenar por fecha de creación (más recientes primero)
-      const sorted = data.sort((a, b) => {
-        const dateA = a.createdAt?.toDate?.() || new Date(0)
-        const dateB = b.createdAt?.toDate?.() || new Date(0)
-        return dateB.getTime() - dateA.getTime()
-      })
-
-      setItems(sorted)
+      if (!user?.uid) return
+      const data = await listAdvisoriesByProgrammer()
+      setItems(data as Advisory[])
     } catch (err: any) {
+      console.error(err)
       setError(`Error: ${err?.message || 'No se pudieron cargar las asesorías.'}`)
     } finally {
       setLoading(false)
@@ -101,14 +82,14 @@ const AdvisoryInbox = () => {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [user?.uid])
 
   const updateStatus = async (id: string, status: 'pendiente' | 'aprobada' | 'rechazada', responseMessage?: string) => {
     setUpdating(id)
     try {
       await updateAdvisoryStatus(id, status, responseMessage)
       await load()
-    } catch (err) {
+    } catch {
       setError('No se pudo actualizar el estado.')
     } finally {
       setUpdating(null)
@@ -143,6 +124,59 @@ const AdvisoryInbox = () => {
     closeResponseModal()
   }
 
+  const generatePDF = () => {
+    try {
+      const doc = new jsPDF() as jsPDFWithAutoTable
+
+      // Header
+      doc.setFontSize(22)
+      doc.setTextColor(93, 78, 55) // #5D4E37
+      doc.text('Reporte de Asesorías Recibidas', 20, 20)
+
+      doc.setFontSize(12)
+      doc.setTextColor(139, 115, 85) // #8B7355
+      doc.text(`Programador: ${user?.displayName || 'N/A'}`, 20, 30)
+      doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 20, 37)
+
+      // Divider
+      doc.setDrawColor(212, 175, 55) // #D4AF37
+      doc.setLineWidth(0.5)
+      doc.line(20, 42, 190, 42)
+
+      const tableRows = items.map(item => [
+        item.requesterName || 'N/A',
+        item.requesterEmail || 'N/A',
+        `${item.slot?.date || ''} ${item.slot?.time || ''}`,
+        item.status.toUpperCase(),
+        item.note || ''
+      ])
+
+      autoTable(doc, {
+        startY: 50,
+        head: [['Cliente', 'Email', 'Fecha/Hora', 'Estado', 'Nota']],
+        body: tableRows,
+        headStyles: {
+          fillColor: [93, 78, 55],
+          textColor: [255, 255, 255],
+          fontSize: 10,
+          fontStyle: 'bold'
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 3
+        },
+        alternateRowStyles: {
+          fillColor: [255, 248, 231] // #FFF8E7
+        }
+      })
+
+      doc.save(`asesorias_${user?.displayName?.replace(/\s+/g, '_') || 'reporte'}.pdf`)
+    } catch (err) {
+      console.error('Error generating PDF:', err)
+      alert('Error al generar el PDF. Asegúrate de tener datos cargados.')
+    }
+  }
+
   const filteredItems = filter === 'todas'
     ? items
     : items.filter(item => item.status === filter)
@@ -163,7 +197,7 @@ const AdvisoryInbox = () => {
   const pendingCount = items.filter(i => i.status === 'pendiente').length
 
   return (
-    <div className="relative min-h-screen p-20 mx-auto">
+    <div className="p-6 md:p-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -188,14 +222,25 @@ const AdvisoryInbox = () => {
             </p>
           </div>
 
-          <button
-            onClick={load}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#D4AF37]/30 text-[#5D4E37] font-semibold hover:bg-[#FFF8E7] transition-all disabled:opacity-50"
-          >
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-            Actualizar
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={load}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#D4AF37]/30 text-[#5D4E37] font-semibold hover:bg-[#FFF8E7] transition-all disabled:opacity-50"
+            >
+              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+              Actualizar
+            </button>
+
+            <button
+              onClick={generatePDF}
+              disabled={loading || items.length === 0}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+            >
+              <Download size={18} />
+              Exportar PDF
+            </button>
+          </div>
         </div>
       </motion.div>
 

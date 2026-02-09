@@ -1,22 +1,17 @@
-/**
- * Enrutador principal de la aplicación con React Router v6.
- * 
- * Define rutas públicas (/, /proyectos, /programadores, /login) y protegidas
- * (/admin/*, /panel/*) con guards de autenticación y rol.
- * 
- * @module App
- * @description Layouts: PublicLayout (navbar+footer) y DashboardLayout (sidebar)
- */
-// Importaciones de React y Router
-import { Suspense, lazy } from 'react'  // lazy: carga páginas solo cuando se necesitan (optimización)
-import { Navigate, Route, Routes } from 'react-router-dom'  // Sistema de navegación
-import ProtectedRoute from './components/guards/ProtectedRoute'  // Protege rutas que requieren login
-import RoleGuard from './components/guards/RoleGuard'  // Protege rutas por rol (admin/programmer)
-import ScrollToTop from './components/common/ScrollToTop'  // Vuelve arriba al cambiar de página
+//enrutador principal de la aplicación con React Router v6
+//define rutas públicas y protegidas con guards de autenticación y rol
+//layouts: PublicLayout (navbar+footer) y DashboardLayout (sidebar)
 
-// Layouts (plantillas de página)
-const PublicLayout = lazy(() => import('./layouts/PublicLayout'))  // Layout con NavBar y Footer
-const DashboardLayout = lazy(() => import('./layouts/DashboardLayout'))  // Layout de panel de control
+//importaciones de React y Router
+import { Suspense, lazy } from 'react' //lazy: carga páginas solo cuando se necesitan (optimización)
+import { Navigate, Route, Routes } from 'react-router-dom' //sistema de navegación
+import ProtectedRoute from './components/guards/ProtectedRoute' //protege rutas que requieren login
+import RoleGuard from './components/guards/RoleGuard' //protege rutas por rol (admin/programmer)
+import ScrollToTop from './components/common/ScrollToTop' //vuelve arriba al cambiar de página
+
+//layouts (plantillas de página)
+const PublicLayout = lazy(() => import('./layouts/PublicLayout')) //layout con NavBar y Footer
+const DashboardLayout = lazy(() => import('./layouts/DashboardLayout')) //layout de panel de control
 const Home = lazy(() => import('./pages/public/Home'))
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'))
 const Projects = lazy(() => import('./pages/public/Projects'))
@@ -42,6 +37,7 @@ const ProfileEditor = lazy(
 )
 const ProjectsPage = lazy(() => import('./pages/programmer/ProjectsPage'))
 const AdvisoryInbox = lazy(() => import('./pages/programmer/AdvisoryInbox'))
+const DiagnosticsPage = lazy(() => import('./pages/admin/DiagnosticsPage'))
 
 const RouteFallback = () => (
   <div className="flex min-h-screen items-center justify-center">
@@ -55,7 +51,7 @@ function App() {
       <ScrollToTop />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          {/* Rutas públicas (con NavBar y Footer) - Todos pueden acceder */}
+          {/* rutas públicas (con NavBar y Footer) - todos pueden acceder */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/proyectos" element={<Projects />} />
@@ -66,7 +62,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
           </Route>
 
-          {/* Rutas de administrador - Solo usuarios con role='admin' */}
+          {/* rutas de administrador - solo usuarios con role='admin' */}
           <Route
             path="/admin"
             element={
@@ -82,6 +78,7 @@ function App() {
             <Route path="proyectos" element={<ProjectsAdmin />} />
             <Route path="horarios" element={<ScheduleManager />} />
             <Route path="usuarios" element={<UserManagement />} />
+            <Route path="diagnostico" element={<DiagnosticsPage />} />
           </Route>
 
           <Route
@@ -99,9 +96,10 @@ function App() {
             <Route path="portafolio" element={<PortfolioEditor />} />
             <Route path="proyectos" element={<ProjectsPage />} />
             <Route path="asesorias" element={<AdvisoryInbox />} />
+            <Route path="horarios" element={<ScheduleManager />} />
           </Route>
 
-          {/* Si la URL no existe, redirige a la página principal */}
+          {/* si la URL no existe, redirige a la página principal */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

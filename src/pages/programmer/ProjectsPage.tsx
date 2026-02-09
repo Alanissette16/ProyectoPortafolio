@@ -1,20 +1,12 @@
-/**
- * Gestión de proyectos del programador.
- * Prácticas: Formularios controlados, validación, estados de carga, consumo Firestore.
- */
-import type { DocumentData } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
-import { FiImage } from 'react-icons/fi'
+import { listProjectsByOwner, updateProject, addProject, deleteProject } from '../../services/data.service'
 import { useAuth } from '../../context/AuthContext'
-import { storage } from '../../services/firebase.config'
-import { addProject, listProjectsByOwner, updateProject } from '../../services/firestore.service'
+import { FiImage, FiTrash2 } from 'react-icons/fi'
 
 const emptyProject = {
   title: '',
   description: '',
   category: 'academico',
-  role: 'frontend',
   techStack: '',
   repoUrl: '',
   demoUrl: '',
@@ -23,7 +15,7 @@ const emptyProject = {
 
 const ProjectsPage = () => {
   const { user } = useAuth()
-  const [projects, setProjects] = useState<(DocumentData & { id: string })[]>([])
+  const [projects, setProjects] = useState<any[]>([])
   const [form, setForm] = useState(emptyProject)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -65,26 +57,20 @@ const ProjectsPage = () => {
     }
   }
 
+  /* 
+   * Función para convertir imagen a Base64 y simular subida.
+   * NOTA: Esto guarda la imagen como string en la BD. 
+   * Idealmente el backend debería manejar subida de archivos real.
+   */
   const uploadImage = async (file: File): Promise<string> => {
-    try {
-      console.log('📸 Subiendo imagen proyecto:', file.name)
-      const timestamp = Date.now()
-      const storageRef = ref(storage, `projects/${timestamp}_${file.name}`)
-      const snapshot = await uploadBytes(storageRef, file)
-      console.log('✅ Imagen subida:', snapshot.metadata.fullPath)
-      const url = await getDownloadURL(storageRef)
-      console.log('🔗 URL:', url)
-      return url
-    } catch (error: any) {
-      console.error('❌ Error al subir imagen:', error)
-      console.error('Código de error:', error.code)
-      console.error('Mensaje:', error.message)
-      
-      if (error.code === 'storage/unauthorized') {
-        throw new Error('⚠️ REGLAS DE STORAGE NO APLICADAS. Ve a Firebase Console > Storage > Rules.')
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        resolve(reader.result as string)
       }
-      throw error
-    }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -93,44 +79,31 @@ const ProjectsPage = () => {
     setMessage('')
     setError('')
     try {
+      // Subir imagen (ahora devuelve base64) si se seleccionó nueva
+      let imageUrl = form.imageUrl
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile)
+      }
+
       const payload = {
         title: form.title,
         description: form.description,
-        category: form.category as 'academico' | 'laboral',
-        role: form.role as 'frontend' | 'backend' | 'fullstack' | 'db',
+        category: form.category,
         techStack: form.techStack.split(',').map((t) => t.trim()).filter(Boolean),
         repoUrl: form.repoUrl,
         demoUrl: form.demoUrl,
-        imageUrl: '',
+        imageUrl: imageUrl,
       }
-
-      let projectId = editingId
 
       if (editingId) {
         // Actualizar proyecto existente
         await updateProject(editingId, payload)
         setMessage('Proyecto actualizado.')
       } else {
-        // Crear nuevo proyecto y obtener su ID
+        // Crear nuevo proyecto
         if (!user?.uid) throw new Error('Usuario no autenticado')
-        const docRef = await addProject(user.uid, payload)
-        projectId = docRef.id
+        await addProject(user.uid, payload)
         setMessage('Proyecto creado.')
-      }
-
-      // Guardar imagen en localStorage DESPUÉS de tener el ID real
-      if (imageFile && projectId) {
-        console.log('📸 Guardando imagen en localStorage con ID:', projectId)
-        const reader = new FileReader()
-        await new Promise<void>((resolve) => {
-          reader.onloadend = () => {
-            const base64 = reader.result as string
-            localStorage.setItem(`project_img_${projectId}`, base64)
-            console.log('✅ Imagen guardada en localStorage')
-            resolve()
-          }
-          reader.readAsDataURL(imageFile)
-        })
       }
 
       setForm(emptyProject)
@@ -146,13 +119,27 @@ const ProjectsPage = () => {
     }
   }
 
-  const startEdit = (p: DocumentData & { id: string }) => {
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este proyecto?')) return
+
+    try {
+      await deleteProject(id)
+      setMessage('Proyecto eliminado correctamente')
+      await loadProjects()
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      console.error('Error al eliminar proyecto:', err)
+      setError('No se pudo eliminar el proyecto')
+      setTimeout(() => setError(''), 3000)
+    }
+  }
+
+  const startEdit = (p: any) => {
     setEditingId(p.id)
     setForm({
       title: p.title,
       description: p.description,
-      category: p.category,
-      role: p.role,
+      category: p.category || 'academico',
       techStack: p.techStack?.join(', ') || '',
       repoUrl: p.repoUrl || '',
       demoUrl: p.demoUrl || '',
@@ -162,7 +149,7 @@ const ProjectsPage = () => {
   }
 
   return (
-    <div className="space-y-4 pt-20 mx-auto">
+    <div className="p-6 md:p-8">
       <h1 className="text-2xl font-bold">Proyectos</h1>
       <div className="grid gap-4 lg:grid-cols-2">
         <form onSubmit={handleSubmit} className="card bg-base-100 shadow-md">
@@ -210,37 +197,19 @@ const ProjectsPage = () => {
                 rows={3}
               />
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Categoría</span>
-                </label>
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="select select-bordered"
-                >
-                  <option value="academico">Académico</option>
-                  <option value="laboral">Laboral</option>
-                </select>
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Rol</span>
-                </label>
-                <select
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  className="select select-bordered"
-                >
-                  <option value="frontend">Frontend</option>
-                  <option value="backend">Backend</option>
-                  <option value="fullstack">Fullstack</option>
-                  <option value="db">Base de datos</option>
-                </select>
-              </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Categoría</span>
+              </label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="select select-bordered"
+              >
+                <option value="academico">Académico</option>
+                <option value="laboral">Laboral</option>
+              </select>
             </div>
             <div className="form-control">
               <label className="label">
@@ -254,7 +223,7 @@ const ProjectsPage = () => {
                 placeholder="React, Firebase, Tailwind"
               />
             </div>
-            
+
             {/* Imagen del proyecto */}
             <div className="form-control">
               <label className="label">
@@ -280,7 +249,7 @@ const ProjectsPage = () => {
                 </label>
               </div>
             </div>
-            
+
             <div className="grid gap-3 md:grid-cols-2">
               <div className="form-control">
                 <label className="label">
@@ -324,15 +293,22 @@ const ProjectsPage = () => {
             <div key={p.id} className="card bg-base-100 shadow-sm">
               <div className="card-body space-y-2">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{p.title}</h3>
-                    <p className="text-xs text-base-content/60">
-                      {p.category} · {p.role}
-                    </p>
+                    {p.category && (
+                      <span className={`badge badge-sm ${p.category === 'academico' ? 'badge-primary' : 'badge-secondary'}`}>
+                        {p.category === 'academico' ? 'Académico' : 'Laboral'}
+                      </span>
+                    )}
                   </div>
-                  <button className="btn btn-ghost btn-xs" onClick={() => startEdit(p)}>
-                    Editar
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button className="btn btn-ghost btn-xs text-error" onClick={() => handleDelete(p.id)}>
+                      <FiTrash2 />
+                    </button>
+                    <button className="btn btn-ghost btn-xs" onClick={() => startEdit(p)}>
+                      Editar
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm text-base-content/70">{p.description}</p>
                 <div className="flex flex-wrap gap-2">

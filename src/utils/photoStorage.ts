@@ -1,22 +1,22 @@
-/**
- * Utilidad para manejar fotos guardadas en localStorage
- */
+//utilidades para manejar fotos guardadas en localStorage
 
-// Función helper para obtener foto (de localStorage o URL directa)
+//obtener URL de foto (desde localStorage o URL directa)
 export const getPhotoURL = (photoURL: string | undefined | null): string => {
   if (!photoURL) return '/default-avatar.svg'
+  //si la foto está en localStorage (prefijo 'local:')
   if (photoURL.startsWith('local:')) {
     const key = `photo_${photoURL.replace('local:', '')}`
     return localStorage.getItem(key) || '/default-avatar.svg'
   }
+  //retornar URL directa
   return photoURL
 }
 
-// Función para comprimir imagen y convertir a base64
+//comprimir imagen y convertir a base64
 export const compressImage = (
-  file: File, 
-  maxSize: number = 200, 
-  quality: number = 0.7
+  file: File,
+  maxSize: number = 200, //tamaño máximo en píxeles
+  quality: number = 0.7 //calidad de compresión (0-1)
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -26,8 +26,8 @@ export const compressImage = (
         const canvas = document.createElement('canvas')
         let width = img.width
         let height = img.height
-        
-        // Redimensionar manteniendo proporción
+
+        //redimensionar manteniendo la proporción de aspecto
         if (width > height) {
           if (width > maxSize) {
             height = (height * maxSize) / width
@@ -39,14 +39,15 @@ export const compressImage = (
             height = maxSize
           }
         }
-        
+
         canvas.width = width
         canvas.height = height
-        
+
+        //dibujar imagen redimensionada en el canvas
         const ctx = canvas.getContext('2d')
         ctx?.drawImage(img, 0, 0, width, height)
-        
-        // Convertir a base64 con compresión
+
+        //convertir canvas a base64 con compresión JPEG
         const base64 = canvas.toDataURL('image/jpeg', quality)
         resolve(base64)
       }
@@ -58,17 +59,19 @@ export const compressImage = (
   })
 }
 
-// Guardar foto en localStorage
+//guardar foto comprimida en localStorage
 export const savePhotoToLocal = async (
-  uid: string, 
-  file: File
+  uid: string, //ID del usuario
+  file: File //archivo de imagen
 ): Promise<string> => {
+  //comprimir imagen antes de guardar
   const compressedBase64 = await compressImage(file, 200, 0.7)
   localStorage.setItem(`photo_${uid}`, compressedBase64)
+  //retornar referencia local
   return `local:${uid}`
 }
 
-// Eliminar foto de localStorage
+//eliminar foto de localStorage
 export const deletePhotoFromLocal = (uid: string): void => {
   localStorage.removeItem(`photo_${uid}`)
 }

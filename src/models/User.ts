@@ -11,7 +11,8 @@
  * - programmer: Programador que puede gestionar su portafolio
  * - external: Usuario externo que puede solicitar asesorías
  */
-export type UserRole = 'admin' | 'programmer' | 'external';
+// Admite tanto minúsculas (legacy/frontend) como mayúsculas (backend)
+export type UserRole = 'admin' | 'programmer' | 'external' | 'ADMIN' | 'PROGRAMMER' | 'EXTERNAL';
 
 /**
  * Estados posibles de un usuario
@@ -42,7 +43,7 @@ export interface ProgrammerProfile {
     lastName?: string;
     email: string;
     photoURL?: string;
-    role: 'programmer';
+    role: 'programmer' | 'PROGRAMMER';
 
     // Información profesional
     specialty?: string;
@@ -90,7 +91,7 @@ export interface ExternalUserProfile {
     displayName: string;
     email: string;
     photoURL?: string;
-    role: 'external';
+    role: 'external' | 'EXTERNAL';
     phone?: string;
     organization?: string;
     createdAt?: Date;
@@ -104,7 +105,7 @@ export interface AdminProfile {
     displayName: string;
     email: string;
     photoURL?: string;
-    role: 'admin';
+    role: 'admin' | 'ADMIN';
     permissions?: string[];
     createdAt?: Date;
 }

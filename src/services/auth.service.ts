@@ -1,169 +1,121 @@
-/**
- * Servicio de autenticación y roles (TypeScript).
- * Práctica: Consumo de APIs Firebase + manejo de roles en Firestore.
- */
-import {
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-  Unsubscribe,
-} from 'firebase/auth'
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  DocumentData,
-  onSnapshot,
-} from 'firebase/firestore'
-import { auth, db, googleProvider } from './firebase.config'
 
-import { UserRole } from '../models/User'
+import { api } from './api.service';
 
-// Re-exportamos para compatibilidad
-export type Role = UserRole
+//tipos de roles de usuario en el sistema
+export type Role = 'admin' | 'programmer' | 'external';
 
+//interfaz que define el perfil de un usuario
 export interface UserProfile {
-  displayName: string | null
-  email: string | null
-  photoURL?: string | null
-  role: Role
-  specialty?: string
-  bio?: string
-  socials?: Record<string, string>
+  id?: number; //identificador único
+  displayName: string | null; //nombre para mostrar
+  email: string | null; //correo electrónico
+  photoURL?: string | null; //URL de la foto de perfil
+  role: Role; //rol del usuario en el sistema
+  token?: string; //token de autenticación
+  //campos adicionales del perfil
+  specialty?: string; //especialidad del programador
+  bio?: string; //biografía
+  socials?: Record<string, string>; //redes sociales
 }
 
-const USERS_COLLECTION = 'users'
-
-// Función para crear/actualizar usuario en Firestore
-export const saveUserToFirestore = async (user: FirebaseUser): Promise<void> => {
-  const userRef = doc(db, USERS_COLLECTION, user.uid)
-
-  const userDoc = await getDoc(userRef)
-
-  if (!userDoc.exists()) {
-    await setDoc(userRef, {
-      displayName: user.displayName || 'Usuario',
-      email: user.email,
-      photoURL: user.photoURL || null,
-      role: 'external' as Role,
-      createdAt: serverTimestamp(),
-      lastLogin: serverTimestamp(),
-    })
-  } else {
-    await setDoc(userRef, {
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      lastLogin: serverTimestamp(),
-    }, { merge: true })
-  }
+//respuesta del backend al autenticarse
+interface AuthResponse {
+  token: string; //token JWT
+  type: string; //tipo de token (normalmente "Bearer")
+  id: number; //ID del usuario
+  email: string; //email del usuario
+  displayName: string; //nombre del usuario
+  role: Role; //rol asignado
 }
 
-// Login con Google y creación del usuario en Firestore
-export const loginWithGoogle = async () => {
+//claves para localStorage
+const AUTH_KEY = 'auth_user';
+const TOKEN_KEY = 'token';
+
+//guardar sesión del usuario en localStorage
+export const saveUserSession = (authResponse: AuthResponse) => {
+  //guardar token de autenticación
+  localStorage.setItem(TOKEN_KEY, authResponse.token);
+
+  //crear objeto de perfil de usuario
+  const user: UserProfile = {
+    id: authResponse.id,
+    email: authResponse.email,
+    displayName: authResponse.displayName,
+    role: (authResponse.role || 'external').toLowerCase() as Role,
+    photoURL: null //el backend aún no retorna photoURL
+  };
+
+  //guardar perfil en localStorage
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  return user;
+};
+
+//limpiar sesión del usuario (cerrar sesión)
+export const clearUserSession = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(AUTH_KEY);
+};
+
+//obtener sesión actual desde localStorage
+export const getUserSession = (): UserProfile | null => {
+  const userStr = localStorage.getItem(AUTH_KEY);
+  if (!userStr) return null;
   try {
-    const result = await signInWithPopup(auth, googleProvider)
-    const user = result.user
-
-    await saveUserToFirestore(user)
-
-    return user
-  } catch (error: any) {
-    if (error.code === 'auth/popup-closed-by-user') {
-      return null
+    const user = JSON.parse(userStr) as UserProfile;
+    //normalizar rol a minúsculas
+    if (user && user.role) {
+      user.role = (user.role || '').toLowerCase() as Role;
     }
-    throw error
-  }
-}
-
-// Login con Email y Contraseña
-export const loginWithEmail = async (email: string, password: string) => {
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password)
-    const user = result.user
-
-    // Actualizar lastLogin en Firestore
-    const userRef = doc(db, USERS_COLLECTION, user.uid)
-    await setDoc(userRef, {
-      lastLogin: serverTimestamp(),
-    }, { merge: true })
-
-    return user
-  } catch (error: any) {
-    throw error
-  }
-}
-
-// Registro con Email y Contraseña
-export const registerWithEmail = async (email: string, password: string, displayName: string) => {
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, password)
-    const user = result.user
-
-    // Actualizar el perfil con el nombre
-    await updateProfile(user, {
-      displayName: displayName,
-    })
-
-    // Crear documento en Firestore
-    const userRef = doc(db, USERS_COLLECTION, user.uid)
-    await setDoc(userRef, {
-      displayName: displayName,
-      email: user.email,
-      photoURL: null,
-      role: 'external' as Role,
-      createdAt: serverTimestamp(),
-      lastLogin: serverTimestamp(),
-    })
-
-    return user
-  } catch (error: any) {
-    throw error
-  }
-}
-
-export const logout = () => firebaseSignOut(auth)
-
-// Escucha de sesión para el AuthContext
-export const subscribeToAuthChanges = (
-  callback: (user: FirebaseUser | null) => void,
-): Unsubscribe => onAuthStateChanged(auth, callback)
-
-// Consulta del rol y perfil en Firestore
-export const fetchUserProfile = async (
-  uid: string,
-): Promise<(UserProfile & DocumentData) | null> => {
-  try {
-    const snap = await getDoc(doc(db, USERS_COLLECTION, uid))
-    return snap.exists() ? (snap.data() as UserProfile & DocumentData) : null
+    return user;
   } catch {
-    return null
+    return null;
   }
-}
+};
 
-// Escucha de cambios en perfil de Firestore (Roles en tiempo real)
-export const subscribeToUserProfile = (
-  uid: string,
-  callback: (profile: (UserProfile & DocumentData) | null) => void,
-): Unsubscribe => {
-  return onSnapshot(
-    doc(db, USERS_COLLECTION, uid),
-    (snap) => {
-      if (snap.exists()) {
-        console.log('[Auth] Perfil actualizado desde DB:', snap.data().role)
-        callback(snap.data() as UserProfile & DocumentData)
-      } else {
-        console.log('[Auth] Perfil no encontrado en DB, usando defaults')
-        callback(null)
-      }
-    },
-    (error) => {
-      console.error('[Auth] Error escuchando perfil:', error)
-      callback(null)
+//iniciar sesión con email y contraseña
+export const loginWithEmail = async (email: string, password: string) => {
+  const response = await api.post<AuthResponse>('/auth/login', { email, password });
+  return saveUserSession(response);
+};
+
+//registrar nuevo usuario
+export const registerWithEmail = async (email: string, password: string, displayName: string) => {
+  const response = await api.post<AuthResponse>('/auth/register', { email, password, displayName });
+  return saveUserSession(response);
+};
+
+//cerrar sesión del usuario
+export const logout = async () => {
+  clearUserSession();
+  //opcional: notificar al backend
+};
+
+//obtener perfil actualizado del usuario desde el backend
+export const getCurrentProfile = async () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+
+  try {
+    const response = await api.get<AuthResponse>('/auth/me');
+    //crear objeto de usuario con la respuesta
+    const user: UserProfile = {
+      id: response.id,
+      email: response.email,
+      displayName: response.displayName,
+      role: (response.role || 'external').toLowerCase() as Role,
+      photoURL: null
+    };
+    //actualizar localStorage con datos frescos
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    return user;
+  } catch (error: any) {
+    console.error('Error fetching current profile:', error);
+    //solo cerrar sesión si es error de autenticación (401)
+    if (error.message?.includes('401')) {
+      clearUserSession();
     }
-  )
-}
+    return null;
+  }
+};
+

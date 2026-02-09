@@ -108,7 +108,7 @@ export class FormUtils {
   static phone(value: string): string | null {
     if (!value) return null;
     // Permite formatos como: +593 99 123 4567, 0991234567, (01) 234-5678
-    const phoneRegex = /^(\+?\d{1,3}[- ]?)?\(?\d{2,3}\)?[- ]?\d{3,4}[- ]?\d{4}$/;
+
     // Un regex más permisivo para inputs internacionales variados, pero asegurando números
     const simplePhoneRegex = /^[+]?[\d\s-]{7,15}$/;
 

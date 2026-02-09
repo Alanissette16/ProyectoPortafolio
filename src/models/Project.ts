@@ -2,7 +2,7 @@
 // MODELOS DE PROYECTO
 // ============================================================================
 // Este archivo centraliza todos los tipos e interfaces relacionados con proyectos.
-// Independiente de la implementación de Firebase para facilitar migración a otros backends.
+// Independiente de la implementación del backend para facilitar migración.
 
 /**
  * Estados posibles de un proyecto
@@ -23,13 +23,14 @@ export interface Project {
     description?: string;
     ownerId?: string; // ID del programador propietario
 
-    // Detalles técnicos (Alineado con firestore.service.ts)
+    // Detalles técnicos
     category: 'academico' | 'laboral' | 'web' | 'mobile' | 'desktop' | 'api' | 'other';
     role?: 'frontend' | 'backend' | 'fullstack' | 'db';
-    techStack?: string[]; // Usado en firestore
+    techStack?: string[];
     technologies?: string[]; // Alias o legacy
 
-    // URLs (Alineado con firestore.service.ts)
+    // URLs
+
     repoUrl?: string;
     demoUrl?: string;
     repositoryUrl?: string; // Alias

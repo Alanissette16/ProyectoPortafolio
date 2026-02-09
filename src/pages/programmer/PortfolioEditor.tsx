@@ -1,17 +1,18 @@
 /**
- * Editor de portafolio del programador.
- * Prácticas: Formularios controlados, validación mínima, feedback DaisyUI.
+ * Editor de portafolio del programador - REDISEÑADO
+ * Características: Vista previa en tiempo real, UI moderna, pills para skills
  */
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { FiUser, FiBookOpen, FiCode, FiTag, FiDroplet, FiEye, FiSave } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
-import { getPortfolio, upsertPortfolio } from '../../services/firestore.service'
+import { getPortfolio, upsertPortfolio } from '../../services/data.service'
 
 const initial = {
   headline: '',
   about: '',
   skills: '',
   tags: '',
-  theme: 'light',
+  theme: 'rosegold',
 }
 
 const PortfolioEditor = () => {
@@ -20,19 +21,50 @@ const PortfolioEditor = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [showPreview, setShowPreview] = useState(true)
+
+  // Parse skills/tags for preview
+  const skillsArray = form.skills.split(',').map((s) => s.trim()).filter(Boolean)
+  const tagsArray = form.tags.split(',').map((s) => s.trim()).filter(Boolean)
 
   useEffect(() => {
     const load = async () => {
       if (!user?.uid) return
       const data = await getPortfolio(user.uid)
       if (data) {
-        setForm({
+        let skillsStr = ''
+        let tagsStr = ''
+
+        try {
+          if (data.skills) {
+            const skillsArray = typeof data.skills === 'string'
+              ? JSON.parse(data.skills)
+              : data.skills
+            skillsStr = Array.isArray(skillsArray) ? skillsArray.join(', ') : ''
+          }
+        } catch {
+          skillsStr = data.skills || ''
+        }
+
+        try {
+          if (data.tags) {
+            const tagsArray = typeof data.tags === 'string'
+              ? JSON.parse(data.tags)
+              : data.tags
+            tagsStr = Array.isArray(tagsArray) ? tagsArray.join(', ') : ''
+          }
+        } catch {
+          tagsStr = data.tags || ''
+        }
+
+        const formData = {
           headline: data.headline || '',
           about: data.about || '',
-          skills: data.skills?.join(', ') || '',
-          tags: data.tags?.join(', ') || '',
-          theme: data.theme || 'light',
-        })
+          skills: skillsStr,
+          tags: tagsStr,
+          theme: data.theme || 'rosegold',
+        }
+        setForm(formData)
       }
     }
     load()
@@ -53,100 +85,276 @@ const PortfolioEditor = () => {
     setMessage('')
     setError('')
     try {
+      const skillsArray = form.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      const tagsArray = form.tags.split(',').map((s) => s.trim()).filter(Boolean)
+
       await upsertPortfolio(user.uid, {
         headline: form.headline,
         about: form.about,
-        skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
-        tags: form.tags.split(',').map((s) => s.trim()).filter(Boolean),
+        skills: JSON.stringify(skillsArray),
+        tags: JSON.stringify(tagsArray),
         theme: form.theme,
       })
-      setMessage('Portafolio guardado.')
-    } catch (err) {
-      setError('No se pudo guardar. Revisa conexión.')
+      setMessage('¡Portafolio guardado exitosamente!')
+      setTimeout(() => setMessage(''), 3000)
+    } catch {
+      setError('Error al cargar perfil. Revisa tu conexión.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-3xl space-y-4 pt-20 mx-auto">
-      <h1 className="text-2xl font-bold">Mi portafolio</h1>
-      <form onSubmit={handleSubmit} className="card bg-base-100 shadow-md">
-        <div className="card-body space-y-3">
-          {message && <div className="alert alert-success text-sm">{message}</div>}
-          {error && <div className="alert alert-error text-sm">{error}</div>}
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Headline *</span>
-            </label>
-            <input
-              name="headline"
-              value={form.headline}
-              onChange={handleChange}
-              className="input input-bordered"
-              required
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Sobre mí</span>
-            </label>
-            <textarea
-              name="about"
-              value={form.about}
-              onChange={handleChange}
-              className="textarea textarea-bordered"
-              rows={3}
-            />
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Skills (coma)</span>
-              </label>
-              <input
-                name="skills"
-                value={form.skills}
-                onChange={handleChange}
-                className="input input-bordered"
-                placeholder="React, Firebase, Tailwind"
-              />
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Mi Portafolio
+        </h1>
+        <p className="text-base-content/70 mt-1">
+          Personaliza cómo se ve tu perfil público
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Form Column */}
+        <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="card-title text-lg">Información</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="btn btn-ghost btn-sm gap-2 lg:hidden"
+                >
+                  <FiEye /> Vista previa
+                </button>
+              </div>
+
+              {message && (
+                <div className="alert alert-success shadow-lg">
+                  <FiSave />
+                  <span>{message}</span>
+                </div>
+              )}
+              {error && (
+                <div className="alert alert-error shadow-lg">
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Headline */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2">
+                    <FiUser className="text-primary" />
+                    Headline *
+                  </span>
+                </label>
+                <input
+                  name="headline"
+                  value={form.headline}
+                  onChange={handleChange}
+                  className="input input-bordered focus:input-primary"
+                  placeholder="Desarrollador Full Stack | React & Node.js"
+                  required
+                />
+                <label className="label">
+                  <span className="label-text-alt text-base-content/60">
+                    Tu título profesional en una línea
+                  </span>
+                </label>
+              </div>
+
+              {/* About */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2">
+                    <FiBookOpen className="text-primary" />
+                    Sobre mí
+                  </span>
+                </label>
+                <textarea
+                  name="about"
+                  value={form.about}
+                  onChange={handleChange}
+                  className="textarea textarea-bordered focus:textarea-primary h-28"
+                  placeholder="Cuéntanos sobre ti, tu experiencia y qué te apasiona..."
+                />
+              </div>
+
+              {/* Skills */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2">
+                    <FiCode className="text-primary" />
+                    Skills
+                  </span>
+                </label>
+                <input
+                  name="skills"
+                  value={form.skills}
+                  onChange={handleChange}
+                  className="input input-bordered focus:input-primary"
+                  placeholder="React, TypeScript, Node.js, PostgreSQL"
+                />
+                <label className="label">
+                  <span className="label-text-alt text-base-content/60">
+                    Separa con comas (,)
+                  </span>
+                </label>
+              </div>
+
+              {/* Tags */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2">
+                    <FiTag className="text-primary" />
+                    Tags
+                  </span>
+                </label>
+                <input
+                  name="tags"
+                  value={form.tags}
+                  onChange={handleChange}
+                  className="input input-bordered focus:input-primary"
+                  placeholder="Frontend, Backend, Fullstack"
+                />
+                <label className="label">
+                  <span className="label-text-alt text-base-content/60">
+                    Categorías de trabajo
+                  </span>
+                </label>
+              </div>
+
+              {/* Theme */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text flex items-center gap-2">
+                    <FiDroplet className="text-primary" />
+                    Tema del portafolio
+                  </span>
+                </label>
+                <select
+                  name="theme"
+                  value={form.theme}
+                  onChange={handleChange}
+                  className="select select-bordered focus:select-primary"
+                >
+                  <option value="rosegold">✨ Rosa Dorado</option>
+                  <option value="lavender">💜 Lavanda</option>
+                  <option value="rosepink">💗 Rosa Pink</option>
+                </select>
+              </div>
+
+              {/* Submit Button */}
+              <div className="card-actions justify-end pt-4">
+                <button
+                  className="btn btn-primary gap-2 w-full sm:w-auto"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <FiSave />
+                      Guardar portafolio
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Tags (coma)</span>
-              </label>
-              <input
-                name="tags"
-                value={form.tags}
-                onChange={handleChange}
-                className="input input-bordered"
-                placeholder="Frontend, Fullstack"
-              />
+          </form>
+        </div>
+
+        {/* Preview Column */}
+        <div className={`${showPreview ? 'block' : 'hidden lg:block'} space-y-4`}>
+          <div className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl border border-base-300 sticky top-4">
+            <div className="card-body">
+              <div className="flex items-center gap-2 mb-4">
+                <FiEye className="text-primary" />
+                <h2 className="card-title text-lg">Vista Previa</h2>
+              </div>
+
+              {/* Preview Header */}
+              <div className="space-y-3">
+                <div className="avatar placeholder">
+                  <div className="bg-primary text-primary-content rounded-full w-20 h-20">
+                    <span className="text-3xl font-bold">
+                      {user?.displayName?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-bold">
+                    {user?.displayName || 'Tu Nombre'}
+                  </h3>
+                  <p className="text-base-content/70 mt-1">
+                    {form.headline || 'Tu headline aparecerá aquí'}
+                  </p>
+                </div>
+
+                {/* About Preview */}
+                {form.about && (
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2">Sobre mí</h4>
+                    <p className="text-sm text-base-content/80 whitespace-pre-wrap">
+                      {form.about}
+                    </p>
+                  </div>
+                )}
+
+                {/* Skills Preview */}
+                {skillsArray.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skillsArray.map((skill, index) => (
+                        <span key={index} className="badge badge-primary gap-1">
+                          <FiCode className="w-3 h-3" />
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags Preview */}
+                {tagsArray.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2">Tags</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {tagsArray.map((tag, index) => (
+                        <span key={index} className="badge badge-secondary badge-outline">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Theme Preview */}
+                <div className="mt-4 p-3 rounded-lg bg-base-100/50 border border-base-content/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Tema seleccionado:</span>
+                    <span className="badge badge-ghost">
+                      {form.theme === 'rosegold' && '✨ Rosa Dorado'}
+                      {form.theme === 'lavender' && '💜 Lavanda'}
+                      {form.theme === 'rosepink' && '💗 Rosa Pink'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Tema DaisyUI</span>
-            </label>
-            <select
-              name="theme"
-              value={form.theme}
-              onChange={handleChange}
-              className="select select-bordered"
-            >
-              <option value="light">Claro</option>
-              <option value="dark">Oscuro</option>
-              <option value="emerald">Emerald</option>
-            </select>
-          </div>
-          <div className="card-actions justify-end">
-            <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar portafolio'}
-            </button>
           </div>
         </div>
-      </form>
+      </div>
     </div>
   )
 }

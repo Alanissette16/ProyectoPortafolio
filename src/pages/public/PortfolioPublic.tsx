@@ -1,16 +1,14 @@
-/**
- * Vista pública de un portafolio individual.
- * Prácticas: Routing con parámetros, UX de carga/skeleton.
- */
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getPortfolio, listProjectsByOwner, type Portfolio } from '../../services/firestore.service'
-import type { DocumentData } from 'firebase/firestore'
+import { getPortfolio, listProjectsByOwner } from '../../services/data.service'
+import { Portfolio } from '../../models/Portfolio'
+import { Project } from '../../models/Project'
+
 
 const PortfolioPublic = () => {
   const { id } = useParams<{ id: string }>()
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null)
-  const [projects, setProjects] = useState<(DocumentData & { id: string })[]>([])
+  const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,6 +19,25 @@ const PortfolioPublic = () => {
           getPortfolio(id),
           listProjectsByOwner(id),
         ])
+
+        // Parse skills and tags if they're JSON strings
+        if (pf) {
+          if (typeof pf.skills === 'string') {
+            try {
+              pf.skills = JSON.parse(pf.skills)
+            } catch {
+              pf.skills = []
+            }
+          }
+          if (typeof pf.tags === 'string') {
+            try {
+              pf.tags = JSON.parse(pf.tags)
+            } catch {
+              pf.tags = []
+            }
+          }
+        }
+
         setPortfolio(pf)
         setProjects(pj)
       } finally {
@@ -41,30 +58,33 @@ const PortfolioPublic = () => {
   }
 
   if (!portfolio) {
-  return (
-    <div className="pt-20 px-4">
-      <div className="alert alert-warning max-w-3xl mx-auto mt-4">
-        Portafolio no encontrado o no publicado.
+    return (
+      <div className="pt-20 px-4">
+        <div className="alert alert-warning max-w-3xl mx-auto mt-4">
+          Portafolio no encontrado o no publicado.
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
 
   return (
     <div className="space-y-6 pt-20 ">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="badge badge-outline">{portfolio?.tags?.join(' · ')}</p>
-          <h1 className="text-3xl font-bold">{portfolio.headline}</h1>
-          <p className="text-base-content/70">{portfolio.about}</p>
+          <p className="badge badge-outline">{Array.isArray(portfolio?.tags) ? portfolio.tags.join(' · ') : ''}</p>
+          <h1 className="text-3xl font-bold">{portfolio?.headline || 'Portafolio'}</h1>
+          <p className="text-base-content/70">{portfolio?.about || ''}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {portfolio.skills?.map((skill) => (
-            <div key={skill} className="badge badge-primary">
-              {skill}
-            </div>
-          ))}
+          {Array.isArray(portfolio?.skills) && portfolio.skills.map((skill: any, index: number) => {
+            const skillName = typeof skill === 'string' ? skill : (skill?.name || '');
+            return (
+              <div key={`skill-${index}-${skillName}`} className="badge badge-primary">
+                {skillName}
+              </div>
+            );
+          })}
         </div>
       </header>
 
@@ -81,7 +101,6 @@ const PortfolioPublic = () => {
               <div className="card-body">
                 <div className="flex items-center justify-between">
                   <h3 className="card-title">{project.title}</h3>
-                  <div className="badge badge-outline">{project.category}</div>
                 </div>
                 <p className="text-sm text-base-content/70">
                   {project.description}

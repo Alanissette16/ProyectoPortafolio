@@ -1,189 +1,361 @@
-# INFORME DEL PROYECTO – PORTAFOLIO 
+# FOREING - Portafolio de Programadores
 
-## 1. Logo de la Carrera y del Proyecto
-
-**Logo Institucional**
-![Logo Institucional](https://upload.wikimedia.org/wikipedia/commons/b/b0/Logo_Universidad_Polit%C3%A9cnica_Salesiana_del_Ecuador.png)
-**Logo Foreing**
 ![Logo Foreing](src/img/logopremiun.png)
----
 
-## 2. Integrantes
-- **Valeria Mantilla** - [Alanissette16](https://github.com/Alanissette16)
+> **Plataforma profesional para gestión de portafolios y asesorías de programadores**  
+> Proyecto académico desarrollado en React + TypeScript + Spring Boot
 
-- **Claudia Quevedo** - [clcmono](https://github.com/clcmono)
-
-**Repositorio Principal:** [https://github.com/Alanissette16/PROYECTOWEB](https://github.com/Alanissette16/PROYECTOWEB)
-
----
-
-## 3. Tecnologías Utilizadas
-
-![React](https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg)
-![TypeScript](https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg)
-![Firebase](https://1000logos.net/wp-content/uploads/2024/05/Firebase-Logo.png)
-![EmailJS](https://www.emclient.com/assets/img/landing/emailjs_logo.png?v=638225293560000000)
-
-* **React 19** - Framework principal para la interfaz de usuario
-* **Firebase** - Plataforma backend como servicio (Authentication, Firestore, Storage, Hosting)
-* **EmailJS** - Servicio para envío automático de correos electrónicos
-* **TypeScript** - Lenguaje de programación con tipado estático
-
-### Stack Complementario
-
-![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![DaisyUI](https://img.shields.io/badge/DaisyUI-5A0FC8?style=for-the-badge&logo=daisyui&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/Alanissette16/ProyectoPortafolio)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot)](https://spring.io/projects/spring-boot)
 
 ---
 
-## 4. Descripción del Proyecto
+## Tabla de Contenidos
 
-El proyecto FOREING es una aplicación web multiusuario para gestionar portafolios profesionales de programadores. Permite crear y administrar perfiles, proyectos y solicitudes de asesorías, conectando a administradores, programadores y usuarios externos en una sola plataforma. La aplicación se centra en la gestión de portafolios y el agendamiento de asesorías, ofreciendo una experiencia intuitiva y segura con autenticación de Google y almacenamiento en la nube.
-
----
-
-## 5. Roles y Funcionalidades
-Descripción de cada rol y su función:
-
-### Administrador
-- Gestión de usuarios programadores (crear, editar, eliminar perfiles)
-- Configuración de horarios de disponibilidad para asesorías
-- Acceso a dashboard con métricas del sistema
-- Gestión de especialidades y perfiles profesionales
-- Control administrativo completo de la plataforma
-
-### Programador
-- Gestión de perfil profesional personal (foto, biografía, especialidades, redes sociales)
-- Administración de portafolio individual con proyectos diferenciados
-- CRUD completo de proyectos clasificados en académicos y laborales
-- Bandeja de asesorías para revisar, aprobar o rechazar solicitudes
-- Envío automático de notificaciones por correo a solicitantes
-
-### Usuario externo
-- Exploración pública del directorio de programadores
-- Visualización detallada de portafolios y proyectos individuales
-- Solicitud de asesorías con selección de programador, fecha y hora
-- Seguimiento del estado de solicitudes enviadas
-- Recepción de confirmaciones por correo electrónico
+- [Descripción](#descripción)
+- [Características](#características)
+- [Tecnologías](#tecnologías)
+- [Instalación](#instalación)
+- [Uso](#uso)
+- [Roles y Permisos](#roles-y-permisos)
+- [Estructura del Proyecto](#estructura-del-proyecto)
+- [Documentación](#documentación)
+- [Equipo](#equipo)
+- [Licencia](#licencia)
 
 ---
 
-## 6. Módulos y Pantallas del Sistema
+## Descripción
 
-### Pantallas Públicas
-* **Home (/)** - Página principal con navegación y acceso a agendar asesorías
-* **Programadores (/programadores)** - Directorio público de programadores registrados
-* **Portafolio Público (/portafolio/:id)** - Vista detallada de portafolio individual
-* **Proyectos (/proyectos)** - Galería de proyectos públicos
-* **Agendar Asesoría (/agendar-asesoria)** - Formulario de solicitud de asesorías
-* **Mis Solicitudes (/mis-solicitudes)** - Seguimiento de asesorías del usuario
+**FOREING** es una plataforma web completa que conecta programadores con personas interesadas en recibir asesorías técnicas. El sistema permite a los programadores mostrar su portafolio profesional, gestionar sus proyectos y atender solicitudes de asesorías de forma eficiente.
 
-### Pantallas de Autenticación
-* **Login (/login)** - Autenticación mediante Google OAuth
+### Objetivos del Proyecto
 
-### Panel Administrativo (/admin)
-* **Dashboard Admin (/admin)** - Resumen con estadísticas del sistema
-* **Gestión de Programadores (/admin/programadores)** - CRUD de perfiles de programadores
-* **Gestión de Proyectos (/admin/proyectos)** - Administración de proyectos
-* **Configuración de Horarios (/admin/horarios)** - Definición de disponibilidad
-
-### Panel de Programador (/panel)
-* **Dashboard Programador (/panel)** - Vista general personal
-* **Editor de Perfil (/panel/perfil)** - Gestión de información personal
-* **Editor de Portafolio (/panel/portafolio)** - Configuración del portafolio
-* **Gestión de Proyectos (/panel/proyectos)** - CRUD de proyectos propios
-* **Bandeja de Asesorías (/panel/asesorias)** - Gestión de solicitudes recibidas
+- Crear un sistema multiusuario con gestión de roles
+- Implementar CRUD completo para portafolios y proyectos
+- Facilitar el agendamiento de asesorías técnicas
+- Proporcionar notificaciones automáticas por email
+- Garantizar seguridad mediante autenticación JWT
 
 ---
 
-## 7. Flujos Principales del Usuario
+## Características
 
-### Flujo de Autenticación
-El usuario accede a la página de login y selecciona "Continuar con Google". Firebase Authentication procesa la solicitud OAuth, crea el perfil en Firestore si no existe previamente, y redirige al usuario al dashboard correspondiente según su rol asignado en el sistema.
+### Para Administradores
+- Dashboard con métricas del sistema
+- Gestión completa de usuarios y programadores
+- Configuración de horarios de disponibilidad
+- Panel de diagnóstico del sistema
 
-### Flujo de Gestión de Programadores (Administrador)
-El administrador ingresa al panel administrativo y accede a la sección de gestión de programadores. Completa el formulario con datos personales, especialidad, foto de perfil y enlaces de redes sociales. Al guardar, la información se almacena en la colección "users" de Firestore con el rol "programmer" asignado.
+### Para Programadores
+- Gestión de perfil profesional con foto y redes sociales
+- Portafolio personalizado con proyectos clasificados (académicos/laborales)
+- Bandeja de asesorías con aprobación/rechazo
+- Notificaciones automáticas a solicitantes
 
-### Flujo de Creación de Proyectos (Programador)
-El programador accede a su panel personal y selecciona la opción de gestión de proyectos. Elige la categoría (académico o laboral), ingresa título, descripción, tecnologías utilizadas y enlaces a repositorios o demos. Los datos se guardan en la colección "projects" de Firestore con referencia al ID del programador.
-
-### Flujo de Solicitud de Asesoría (Usuario Externo)
-El usuario externo navega por el directorio de programadores y selecciona uno disponible. Completa el formulario con datos de contacto, selecciona fecha y hora disponible, y agrega un mensaje opcional. La solicitud se registra en la colección "advisories" de Firestore con estado "pendiente".
-
-### Flujo de Gestión de Asesorías (Programador)
-El programador revisa su bandeja de asesorías, filtra las solicitudes por estado y selecciona aprobar o rechazar cada una. Al cambiar el estado, se actualiza el registro en Firestore y se envía automáticamente una notificación por correo electrónico al solicitante mediante EmailJS.
-
----
-
-## 8. Fragmentos Técnicos Importantes
-
-### Envío de Notificaciones por Correo
-
-``
-// Envío de confirmación de asesoría
-await sendRequesterStatusEmail({
-  requesterEmail: advisoryData.requesterEmail,
-  requesterName: advisoryData.requesterName,
-  programmerName: contact.programmerName,
-  status: 'aprobada',
-  date: advisoryData.slot?.date,
-  time: advisoryData.slot?.time,
-  responseMessage: 'Confirmada'
-})
-``
-
-### Guardado en Firestore
-
-`
-// Solicitud de asesoría
-await addDoc(collection(db, 'advisories'), {
-  programmerId: selectedProgrammer,
-  requesterName: formData.name,
-  requesterEmail: formData.email,
-  slot: { date: selectedDate, time: selectedTime },
-  note: formData.message,
-  status: 'pendiente',
-  createdAt: serverTimestamp()
-})
-`
-
-### Autenticación con Google
-
-`
-// login con Google OAuth
-const result = await signInWithPopup(auth, googleProvider)
-const user = result.user
-await saveUserToFirestore(user)
-return user
-`
-
-### Consulta Filtrada por Rol
-
-`	
-// Consulta de programadores
-const q = query(
-  collection(db, 'users'),
-  where('role', '==', 'programmer')
-)
-const snapshot = await getDocs(q)
-`
+### Para Usuarios Externos
+- Directorio público de programadores disponibles
+- Visualización detallada de portafolios y proyectos
+- Solicitud de asesorías con selección de fecha/hora
+- Seguimiento del estado de solicitudes
 
 ---
 
-## 9. Conclusiones
+## Tecnologías
 
-### Logros del Proyecto
+### Frontend
+![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-7.2-646CFF?style=for-the-badge&logo=vite)
+![TailwindCSS](https://img.shields.io/badge/Tailwind-3-38B2AC?style=for-the-badge&logo=tailwind-css)
+![DaisyUI](https://img.shields.io/badge/DaisyUI-4-5A0FC8?style=for-the-badge&logo=daisyui)
 
-En el proyecto se implementó un sistema multiusuario con tres roles definidos, utilizando React y Firebase. También incluye una interfaz adaptable que funciona bien tanto en teléfonos móviles como en computadoras. Se logró cumplir con la autenticación, el manejo de la base de datos y el envío de notificaciones por correo electrónico con Google.
+- **React 19** - Biblioteca UI con componentes funcionales
+- **TypeScript 5.6** - Tipado estático para JavaScript
+- **Vite 7.2** - Build tool rápido y moderno
+- **TailwindCSS + DaisyUI** - Estilos utility-first con componentes
+- **Framer Motion** - Animaciones fluidas
+- **React Router 7** - Enrutamiento SPA
 
-### Aprendizajes Obtenidos
+### Backend
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?style=for-the-badge&logo=springboot)
+![Java](https://img.shields.io/badge/Java-21-007396?style=for-the-badge&logo=openjdk)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens)
 
-En este proyecto ampliamos y fortalecimos nuestros conocimientos al decidir utilizar React. Al inicio estábamos acostumbradas a trabajar con Angular, pero al usar React notamos que es más sencillo y práctico, ya que sus componentes integran HTML y TypeScript en un solo archivo. A diferencia de Angular, donde cada componente genera varios archivos (como HTML, TS y CSS), en React la estructura es más ligera y fácil de manejar.
+- **Spring Boot 3.4** - Framework backend empresarial
+- **Spring Security + JWT** - Autenticación y autorización
+- **Spring Data JPA** - Persistencia de datos
+- **PostgreSQL 16** - Base de datos relacional
+- **Validation API** - Validación de datos
 
-Además, al implementar Firebase como base de datos, aprendimos a gestionarlo correctamente. Pudimos registrar usuarios, modificar sus roles, visualizar sus correos y también eliminar o deshabilitar cuentas cuando fue necesario. Finalmente, incorporamos la API de EmailJS, que nos permitió enviar correos electrónicos desde la aplicación web utilizando únicamente JavaScript, de forma rápida y gratuita.
+---
 
-### Mejoras Futuras
+## Instalación
 
-Como posibles mejoras para futuras versiones del sistema, se podrían implementar notificaciones push en tiempo real y un ayudante IA que conteste las dudas de los usuarios.
+### Prerrequisitos
+
+- **Node.js** 20+ y npm
+- **Java** 21+
+- **PostgreSQL** 16+
+- **Git**
+
+### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/Alanissette16/ProyectoPortafolio.git
+cd ProyectoPortafolio
+```
+
+### 2. Configurar Frontend
+
+```bash
+# Instalar dependencias
+npm install
+
+# Crear archivo de variables de entorno
+cp .env.example .env
+
+# Configurar la URL del backend en .env
+VITE_API_URL=http://localhost:8080/api
+```
+
+### 3. Configurar Backend
+
+```bash
+cd ../Backend-Portafolio
+
+# Configurar base de datos en src/main/resources/application.yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/portafolio_db
+    username: tu_usuario
+    password: tu_contraseña
+```
+
+### 4. Ejecutar el Proyecto
+
+#### Backend (Spring Boot)
+```bash
+# En la carpeta Backend-Portafolio
+./gradlew bootRun
+
+# O compilar y ejecutar el JAR
+./gradlew build
+java -jar build/libs/proyecto-portafolio-0.0.1.jar
+```
+
+#### Frontend (React)
+```bash
+# En la carpeta ProyectoPortafolio
+npm run dev
+
+# Para producción
+npm run build
+npm run preview
+```
+
+La aplicación estará disponible en:
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:8080
+
+---
+
+## Roles y Permisos
+
+| Rol | Acceso | Rutas Disponibles |
+|-----|--------|-------------------|
+| **Admin** | Gestión completa del sistema | `/admin/*` |
+| **Programmer** | Gestión de portafolio y asesorías | `/panel/*` |
+| **External** | Visualización y solicitudes | `/`, `/programadores`, `/agendar-asesoria` |
+
+### Credenciales de Prueba
+
+```
+Admin:
+- Email: admin@foreing.com
+- Password: admin123
+
+Programmer:
+- Email: programador@foreing.com
+- Password: prog123
+
+External:
+- Registro libre desde /login
+```
+
+---
+
+## Estructura del Proyecto
+
+### Frontend
+```
+src/
+├── components/       # Componentes reutilizables
+│   ├── common/      # Componentes básicos (Logo, SEOHead, etc)
+│   ├── guards/      # Protección de rutas (ProtectedRoute, RoleGuard)
+│   └── layout/      # Componentes de layout (NavBar, Footer)
+├── context/         # Contextos de React (Auth, Theme)
+├── layouts/         # Plantillas de página (Public, Dashboard)
+├── pages/          # Páginas de la aplicación
+│   ├── admin/      # Panel administrativo
+│   ├── auth/       # Autenticación
+│   ├── programmer/ # Panel de programador
+│   └── public/     # Páginas públicas
+├── services/       # Lógica de comunicación con API
+│   ├── api.service.ts      # Cliente HTTP
+│   ├── auth.service.ts     # Autenticación
+│   └── data.service.ts     # CRUD de datos
+└── utils/          # Utilidades (validación, storage, etc)
+```
+
+### Backend
+```
+src/main/java/com/backend/proyecto/
+├── Usuarios/          # Módulo de usuarios
+│   ├── controllers/   # Endpoints REST
+│   ├── services/      # Lógica de negocio
+│   ├── entities/      # Modelos de datos
+│   └── dtos/          # Objetos de transferencia
+├── Proyectos/         # Módulo de proyectos
+├── asesorias/         # Módulo de asesorías
+├── horarios/          # Módulo de horarios
+└── security/          # Configuración de seguridad JWT
+```
+
+---
+
+## Documentación
+
+### Código Documentado
+
+El proyecto cuenta con **documentación completa en español** usando comentarios `//` en los archivos core:
+
+- **Servicios** - `data.service.ts`, `auth.service.ts`, `api.service.ts`
+- **Contextos** - `AuthContext.tsx`
+- **Utilidades** - `photoStorage.ts`
+- **Configuración** - `App.tsx`, `main.tsx`
+
+> Ver [`documentation_summary.md`](docs/documentation_summary.md) para detalles completos
+
+### Calidad del Código
+
+- ESLint configurado con TypeScript
+- 0 console.log en código de producción
+- Build exitoso sin errores
+- Variables no usadas eliminadas
+- Imports optimizados
+
+```bash
+# Verificar calidad del código
+npm run lint        # Linting
+npx tsc --noEmit   # Type checking
+npm run build      # Build de producción
+```
+
+---
+
+## Uso
+
+### Flujo Típico de Usuario
+
+1. **Usuario Externo** visita la página y explora programadores
+2. Selecciona un programador y solicita una asesoría
+3. **Programador** recibe la solicitud en su bandeja
+4. Aprueba o rechaza con un mensaje personalizado
+5. Sistema envía email automático al solicitante
+6. **Admin** puede ver métricas y gestionar el sistema
+
+### Endpoints Principales
+
+```typescript
+// Autenticación
+POST   /api/auth/login        // Iniciar sesión
+POST   /api/auth/register     // Registrarse
+GET    /api/auth/me           // Obtener perfil actual
+
+// Usuarios
+GET    /api/usuarios                    // Listar todos
+GET    /api/usuarios/programadores      // Listar programadores
+GET    /api/usuarios/{id}               // Obtener por ID
+PUT    /api/usuarios/{id}               // Actualizar
+DELETE /api/usuarios/{id}               // Eliminar
+
+// Proyectos
+GET    /api/proyectos/publicos          // Proyectos públicos
+GET    /api/proyectos/programador/{id}  // Por programador
+POST   /api/proyectos                    // Crear
+PUT    /api/proyectos/{id}               // Actualizar
+DELETE /api/proyectos/{id}               // Eliminar
+
+// Asesorías
+GET    /api/asesorias/programador       // Asesorías del programador
+GET    /api/asesorias/mias              // Mis solicitudes
+POST   /api/asesorias                    // Solicitar asesoría
+PUT    /api/asesorias/{id}/gestionar    // Aprobar/Rechazar
+```
+
+---
+
+## Equipo
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/Alanissette16.png" width="100px;" alt="Valeria Mantilla"/>
+      <br />
+      <sub><b>Valeria Mantilla</b></sub>
+      <br />
+      <a href="https://github.com/Alanissette16">@Alanissette16</a>
+      <br />
+      <sub>Frontend & UI/UX</sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/clcmono.png" width="100px;" alt="Claudia Quevedo"/>
+      <br />
+      <sub><b>Claudia Quevedo</b></sub>
+      <br />
+      <a href="https://github.com/clcmono">@clcmono</a>
+      <br />
+      <sub>Backend & Database</sub>
+    </td>
+  </tr>
+</table>
+
+**Universidad Politécnica Salesiana**  
+**Carrera:** Ingeniería en Ciencias de la Computación  
+**Asignatura:** Programación para Web  
+**Período:** 2024-2025
+
+---
+
+## Licencia
+
+Este proyecto es de código abierto bajo la licencia MIT.
+
+**Repositorio Principal:** [https://github.com/Alanissette16/ProyectoPortafolio](https://github.com/Alanissette16/ProyectoPortafolio)
+
+---
+
+## Soporte
+
+¿Tienes preguntas o sugerencias? 
+
+- Email: valeria.mantilla@est.ups.edu.ec
+- Email: claudia.quevedo@est.ups.edu.ec
+- Issues: [GitHub Issues](https://github.com/Alanissette16/ProyectoPortafolio/issues)
+
+---
+
+<div align="center">
+
+**Si te gusta el proyecto, dale una estrella en GitHub**
+
+![Universidad Politécnica Salesiana](https://upload.wikimedia.org/wikipedia/commons/b/b0/Logo_Universidad_Polit%C3%A9cnica_Salesiana_del_Ecuador.png)
+
+Hecho con dedicación por el equipo FOREING
+
+</div>

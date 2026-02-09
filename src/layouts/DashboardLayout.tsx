@@ -4,7 +4,7 @@
  */
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import NavBar from '../components/layout/NavBar'
-import { Home, Users, FolderOpen, Calendar, Briefcase, MessageSquare, User, ShieldAlert } from 'lucide-react'
+import { Home, Users, FolderOpen, Calendar, Briefcase, MessageSquare, User, ShieldAlert, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
@@ -16,6 +16,7 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
     { to: '/admin/proyectos', label: 'Proyectos', icon: FolderOpen },
     { to: '/admin/horarios', label: 'Horarios', icon: Calendar },
     { to: '/admin/usuarios', label: 'Usuarios y Roles', icon: ShieldAlert },
+    { to: '/admin/diagnostico', label: 'Diagnóstico y Reportes', icon: BarChart3 },
 
   ]
 
@@ -25,6 +26,7 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
     { to: '/panel/portafolio', label: 'Portafolio', icon: Briefcase },
     { to: '/panel/proyectos', label: 'Proyectos', icon: FolderOpen },
     { to: '/panel/asesorias', label: 'Asesorías', icon: MessageSquare },
+    { to: '/panel/horarios', label: 'Horarios', icon: Calendar },
   ]
 
   const links = role === 'admin' ? adminLinks : programmerLinks
@@ -40,7 +42,7 @@ const DashboardLayout = ({ role }: { role: 'admin' | 'programmer' }) => {
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFFAF0 0%, #FFF8E7 50%, #FFF5E6 100%)' }}>
       <NavBar />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-28 pb-8">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
           <motion.aside

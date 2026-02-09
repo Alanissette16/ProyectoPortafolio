@@ -1,13 +1,11 @@
 /**
  * Editor de perfil del programador (foto, nombre, bio, especialidad).
  */
-import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { motion } from 'framer-motion'
 import { AlertTriangle, Briefcase, Camera, Clock, Github, Instagram, Linkedin, MapPin, Phone, Plus, Quote, Save, Sparkles, Users, X } from 'lucide-react'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db, storage } from '../../services/firebase.config'
+import { getUserProfile, updateUserProfile } from '../../services/data.service'
 
 const initialForm = {
   displayName: '',
@@ -46,10 +44,28 @@ const ProfileEditor = () => {
     const loadProfile = async () => {
       if (!user?.uid) return
       try {
-        const docRef = doc(db, 'users', user.uid)
-        const docSnap = await getDoc(docRef)
-        if (docSnap.exists()) {
-          const data = docSnap.data()
+        const data = await getUserProfile(user.uid)
+        if (data) {
+          // Parse socials from JSON string if needed
+          let socials = data.socials || {};
+          if (typeof socials === 'string') {
+            try {
+              socials = JSON.parse(socials);
+            } catch {
+              socials = {};
+            }
+          }
+
+          // Parse stats from JSON string if needed
+          let stats = data.stats || {};
+          if (typeof stats === 'string') {
+            try {
+              stats = JSON.parse(stats);
+            } catch {
+              stats = {};
+            }
+          }
+
           setForm({
             displayName: data.displayName || '',
             lastName: data.lastName || '',
@@ -58,20 +74,32 @@ const ProfileEditor = () => {
             bio: data.bio || '',
             quote: data.quote || '',
             location: data.location || '',
-            github: data.socials?.github || '',
-            instagram: data.socials?.instagram || '',
-            linkedin: data.socials?.linkedin || '',
-            whatsapp: data.socials?.whatsapp || '',
-            projects: data.stats?.projects?.toString() || '',
-            experience: data.stats?.experience || '',
-            clients: data.stats?.clients?.toString() || '',
+            github: socials?.github || '',
+            instagram: socials?.instagram || '',
+            linkedin: socials?.linkedin || '',
+            whatsapp: socials?.whatsapp || '',
+            projects: stats?.projects?.toString() || '',
+            experience: stats?.experience || '',
+            clients: stats?.clients?.toString() || '',
           })
+
+          // Parse skills from JSON string if needed
+          let skillsData = data.skills;
+          if (typeof skillsData === 'string') {
+            try {
+              skillsData = JSON.parse(skillsData);
+            } catch {
+              skillsData = [];
+            }
+          }
+
           // Cargar skills con niveles
-          const loadedSkills = data.skills || [{ name: 'JavaScript', level: 80 }]
+          const loadedSkills = skillsData || [{ name: 'JavaScript', level: 80 }]
           setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) =>
             typeof s === 'string' ? { name: s, level: 80 } : s
           ) : [{ name: 'JavaScript', level: 80 }])
-          // Cargar foto desde localStorage
+
+          // Cargar foto
           const savedPhoto = localStorage.getItem(`photo_${user.uid}`)
           setPhotoPreview(savedPhoto || data.photoURL || '')
         }
@@ -99,25 +127,15 @@ const ProfileEditor = () => {
     }
   }
 
-  const uploadPhoto = async (uid: string, file: File): Promise<string> => {
-    try {
-      console.log('📸 Subiendo foto de perfil:', file.name)
-      const storageRef = ref(storage, `programmers/${uid}/profile.jpg`)
-      const snapshot = await uploadBytes(storageRef, file)
-      console.log('✅ Foto subida:', snapshot.metadata.fullPath)
-      const url = await getDownloadURL(storageRef)
-      console.log('🔗 URL obtenida:', url)
-      return url
-    } catch (error: any) {
-      console.error('❌ Error al subir foto:', error)
-      console.error('Código de error:', error.code)
-      console.error('Mensaje:', error.message)
-
-      if (error.code === 'storage/unauthorized') {
-        throw new Error('⚠️ REGLAS DE STORAGE NO APLICADAS. Ve a Firebase Console > Storage > Rules.')
+  // Convertir foto a Base64
+  const convertPhotoToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        resolve(reader.result as string)
       }
-      throw error
-    }
+      reader.readAsDataURL(file)
+    })
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -132,22 +150,13 @@ const ProfileEditor = () => {
     setError('')
 
     try {
-      console.log('🔄 Iniciando actualización de perfil...')
       let photoURL = user.photoURL
 
-      // Guardar foto en localStorage si hay una nueva
+      // Guardar foto en localStorage si hay una nueva (o como string en BD)
       if (photoFile) {
-        console.log('📸 Guardando foto en localStorage...')
-        const reader = new FileReader()
-        photoURL = await new Promise<string>((resolve) => {
-          reader.onloadend = () => {
-            const base64 = reader.result as string
-            localStorage.setItem(`photo_${user.uid}`, base64)
-            console.log('✅ Foto guardada en localStorage')
-            resolve(base64)
-          }
-          reader.readAsDataURL(photoFile)
-        })
+        const base64 = await convertPhotoToBase64(photoFile)
+        photoURL = base64
+        localStorage.setItem(`photo_${user.uid}`, base64)
       }
 
       // Construir objeto socials sin undefined
@@ -164,22 +173,7 @@ const ProfileEditor = () => {
         clients: parseInt(form.clients) || 0,
       }
 
-      console.log('📝 Datos a guardar:', {
-        displayName: form.displayName,
-        lastName: form.lastName,
-        specialty: form.specialty,
-        bio: form.bio,
-        quote: form.quote,
-        location: form.location,
-        socials,
-        stats
-      })
-
-      // Actualizar documento en Firestore
-      const docRef = doc(db, 'users', user.uid)
-      console.log('🔥 Actualizando Firestore documento:', user.uid)
-
-      await updateDoc(docRef, {
+      const payload = {
         displayName: form.displayName,
         lastName: form.lastName,
         email: form.email,
@@ -187,19 +181,19 @@ const ProfileEditor = () => {
         bio: form.bio,
         quote: form.quote,
         location: form.location,
-        skills: skills,
-        socials,
-        stats,
-        updatedAt: serverTimestamp(),
-      })
+        skills: JSON.stringify(skills), // Convert array to JSON string
+        socials: JSON.stringify(socials), // Convert object to JSON string
+        stats: JSON.stringify(stats), // Convert object to JSON string
+        photoURL: photoURL, // Updated photo
+        // updatedAt: serverTimestamp(), // Backend handles this
+      }
 
-      console.log('✅ Perfil actualizado en Firestore')
+      // Actualizar documento en Backend
+      await updateUserProfile(user.uid, payload)
       setMessage('✓ Perfil actualizado correctamente.')
       setPhotoFile(null)
     } catch (err: any) {
       console.error('❌ Error completo:', err)
-      console.error('Código:', err.code)
-      console.error('Mensaje:', err.message)
       setError(`Error: ${err.message || 'No se pudo actualizar'}`)
     } finally {
       setLoading(false)
@@ -208,7 +202,7 @@ const ProfileEditor = () => {
 
   return (
     <motion.div
-      className="p-20 space-y-6"
+      className="p-6 md:p-8 space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >

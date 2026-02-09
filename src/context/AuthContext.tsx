@@ -1,7 +1,4 @@
-/**
- * Contexto de autenticación y roles.
- * Prácticas: Fundamentos (estado/context), consumo de Firebase Auth y routing protegido.
- */
+
 import {
   createContext,
   useContext,
@@ -9,118 +6,124 @@ import {
   useState,
   useMemo,
   ReactNode,
-} from 'react'
+} from 'react';
 import {
-  loginWithGoogle,
-  logout,
-  subscribeToAuthChanges,
-  fetchUserProfile,
-  saveUserToFirestore,
-  subscribeToUserProfile,
+  loginWithEmail,
+  registerWithEmail,
+  logout as authLogout,
+  getUserSession,
   Role,
   UserProfile,
-} from '../services/auth.service'
+} from '../services/auth.service';
 
+//interfaz que define la estructura del contexto de autenticación
 interface AuthContextValue {
-  user: (UserProfile & { uid: string }) | null
-  role: Role | null
-  loading: boolean
-  login: () => Promise<unknown>
-  logout: () => Promise<void>
-  isAuthenticated: boolean
+  user: (UserProfile & { uid?: string }) | null; //usuario actual autenticado
+  role: Role | null; //rol del usuario (admin, programmer, external)
+  loading: boolean; //indica si se está cargando la información de autenticación
+  login: (email: string, pass: string) => Promise<unknown>; //función para iniciar sesión
+  register: (email: string, pass: string, name: string) => Promise<unknown>; //función para registrarse
+  logout: () => Promise<void>; //función para cerrar sesión
+  isAuthenticated: boolean; //indica si hay un usuario autenticado
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+//crear el contexto de autenticación
+const AuthContext = createContext<AuthContextValue | null>(null);
 
+//proveedor del contexto de autenticación para toda la aplicación
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<(UserProfile & { uid: string }) | null>(null)
-  const [role, setRole] = useState<Role | null>(null)
+  //estado para almacenar los datos del usuario autenticado
+  const [user, setUser] = useState<(UserProfile & { uid?: string }) | null>(null);
+  //estado para almacenar el rol del usuario
+  const [role, setRole] = useState<Role | null>(null);
+  //estado para indicar si se está cargando la información
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(true)
-
-  // Escuchamos cambios de sesión y perfil en tiempo real
+  //efecto que se ejecuta al montar el componente para inicializar la autenticación
   useEffect(() => {
-    let unsubscribeProfile: (() => void) | undefined
-
-    const unsubscribeAuth = subscribeToAuthChanges(async (firebaseUser) => {
-      if (unsubscribeProfile) {
-        unsubscribeProfile()
-        unsubscribeProfile = undefined
+    const initAuth = async () => {
+      //intentar cargar sesión desde localStorage para UI inmediata
+      const savedUser = getUserSession();
+      if (savedUser) {
+        setUser({ ...savedUser, uid: savedUser.id?.toString() });
+        setRole(savedUser.role);
       }
 
-      if (!firebaseUser) {
-        setUser(null)
-        setRole(null)
-        setLoading(false)
-        return
-      }
-
-      // Asegurar registro inicial
+      //sincronizar con backend para obtener información actualizada
       try {
-        await saveUserToFirestore(firebaseUser)
-      } catch (error) {
-        console.error('Error registrando usuario:', error)
-      }
-
-      // Suscribirse a cambios del documento en Firestore
-      unsubscribeProfile = subscribeToUserProfile(firebaseUser.uid, (profile) => {
-        if (profile) {
-          const roleStr = typeof profile.role === 'string' ? profile.role.trim() : 'external'
-          const safeRole = (['admin', 'programmer', 'external'].includes(roleStr) ? roleStr : 'external') as Role
-
-          setUser({ uid: firebaseUser.uid, ...profile })
-          setRole(safeRole)
-        } else {
-          // Fallback visual
-          setUser({
-            uid: firebaseUser.uid,
-            displayName: firebaseUser.displayName || '',
-            email: firebaseUser.email || '',
-            photoURL: firebaseUser.photoURL || undefined,
-            role: 'external',
-          })
-          setRole('external')
+        const { getCurrentProfile } = await import('../services/auth.service');
+        const freshUser = await getCurrentProfile();
+        if (freshUser) {
+          setUser({ ...freshUser, uid: freshUser.id?.toString() });
+          setRole(freshUser.role);
         }
-        setLoading(false)
-      })
-    })
+      } catch (error) {
+        console.error('Failed to sync profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => {
-      unsubscribeAuth()
-      if (unsubscribeProfile) unsubscribeProfile()
-    }
-  }, [])
+    initAuth();
+  }, []);
 
-  // Login con Google
-  const login = async () => {
-    setLoading(true)
+  //función para iniciar sesión con email y contraseña
+  const login = async (email: string, pass: string) => {
+    setLoading(true);
     try {
-      const res = await loginWithGoogle()
-      setLoading(false)
-      return res
+      const userProfile = await loginWithEmail(email, pass);
+      setUser({ ...userProfile, uid: userProfile.id?.toString() });
+      setRole(userProfile.role);
+      setLoading(false);
+      return userProfile;
     } catch (error) {
-      setLoading(false)
-      throw error
+      setLoading(false);
+      throw error;
     }
-  }
+  };
 
+  //función para registrar un nuevo usuario
+  const register = async (email: string, pass: string, name: string) => {
+    setLoading(true);
+    try {
+      const userProfile = await registerWithEmail(email, pass, name);
+      setUser({ ...userProfile, uid: userProfile.id?.toString() });
+      setRole(userProfile.role);
+      setLoading(false);
+      return userProfile;
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
+  };
+
+  //función para cerrar sesión y limpiar estado
+  const logout = async () => {
+    await authLogout();
+    setUser(null);
+    setRole(null);
+  };
+
+  //memorizar el valor del contexto para evitar re-renders innecesarios
   const value: AuthContextValue = useMemo(
     () => ({
       user,
       role,
       loading,
       login,
+      register,
       logout,
-      isAuthenticated: !!user,
+      isAuthenticated: !!user //el usuario está autenticado si user no es null
     }),
-    [user, role, loading],
-  )
+    [user, role, loading]
+  );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
+//hook personalizado para usar el contexto de autenticación en cualquier componente
 export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider')
-  return ctx
-}
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};

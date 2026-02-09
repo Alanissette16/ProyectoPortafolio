@@ -33,15 +33,15 @@ export interface AdvisoryRequest {
     // Información del programador (si está asignado)
     programmerId?: string;
     programmerName?: string;
-    programmerEmail?: string; // Agrego este campo usado en firestore
+    programmerEmail?: string; // Agrego este campo usado en backend
 
     // Detalles de la solicitud
-    title?: string; // Opcional en firestore implementation actual
+    title?: string; // Opcional en backend implementation actual
     description?: string; // Opcional
     type?: AdvisoryType;
     priority?: AdvisoryPriority;
 
-    // Slot de tiempo (Usado en firestore implementation)
+    // Slot de tiempo (Usado en backend implementation)
     slot?: {
         date: string;
         time: string;

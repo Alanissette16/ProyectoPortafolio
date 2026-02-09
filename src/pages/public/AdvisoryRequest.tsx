@@ -26,14 +26,12 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { addAdvisoryRequest, getScheduleByProgrammer, listProgrammers } from '../../services/firestore.service'
+import { addAdvisoryRequest, getScheduleByProgrammer, listProgrammers } from '../../services/data.service'
 import { getPhotoURL } from '../../utils/photoStorage'
-import { isProgrammerAvailableAtSlot } from '../../utils/scheduleUtils'
+import { isProgrammerAvailableAtSlot, isProgrammerAvailableOnDate } from '../../utils/scheduleUtils'
 import { FormUtils } from '../../utils/FormUtils'
 
-// Imágenes del equipo
-import fotoClaudia from '../../assets/images/team/claudia.jpg'
-import fotoValeria from '../../assets/images/team/valeria.jpg'
+
 
 // Tipo para asesores
 interface Advisor {
@@ -79,6 +77,8 @@ const AdvisoryRequest = () => {
   const [advisors, setAdvisors] = useState<Advisor[]>([])
   const [availabilityChecked, setAvailabilityChecked] = useState(false)
   const [isSlotAvailable, setIsSlotAvailable] = useState(true)
+  const [isDayAvailable, setIsDayAvailable] = useState(true)
+  const [hasNoSchedule, setHasNoSchedule] = useState(false)
 
   const [formData, setFormData] = useState({
     name: user?.displayName || '',
@@ -90,28 +90,10 @@ const AdvisoryRequest = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
 
   // Fundadoras (siempre aparecen)
-  const founders: Advisor[] = [
-    {
-      id: 'claudia',
-      name: 'Claudia',
-      role: 'Full Stack Developer',
-      image: fotoClaudia,
-      specialty: 'Desarrollo Web & Apps',
-      gradient: 'from-[#D4AF37] to-[#B8860B]',
-      bgGradient: 'from-[#FFF8E7] to-[#FFF0D4]'
-    },
-    {
-      id: 'valeria',
-      name: 'Valeria',
-      role: 'UI/UX Designer',
-      image: fotoValeria,
-      specialty: 'Diseño & Branding',
-      gradient: 'from-[#D4A574] to-[#D4AF37]',
-      bgGradient: 'from-[#FFFAF0] to-[#FFF5E6]'
-    }
-  ]
+  // Fundadoras eliminadas (solo backend)
+  const founders: Advisor[] = []
 
-  // Cargar programadores de Firestore
+  // Cargar programadores del Backend
   useEffect(() => {
     const loadAdvisors = async () => {
       try {
@@ -125,7 +107,7 @@ const AdvisoryRequest = () => {
           { gradient: 'from-[#4CAF50] to-[#388E3C]', bgGradient: 'from-[#E8F5E9] to-[#C8E6C9]' },
         ]
 
-        const firestoreAdvisors: Advisor[] = programmers.map((prog: any, index: number) => {
+        const backendAdvisors: Advisor[] = programmers.map((prog: any, index: number) => {
           const colorSet = gradients[index % gradients.length]
           return {
             id: prog.id,
@@ -137,9 +119,9 @@ const AdvisoryRequest = () => {
           }
         })
 
-        // Combinar fundadoras + programadores de Firestore
-        setAdvisors([...founders, ...firestoreAdvisors])
-      } catch (error) {
+        // Combinar fundadoras + programadores del Backend
+        setAdvisors([...founders, ...backendAdvisors])
+      } catch {
         // En caso de error, solo mostrar fundadoras
         setAdvisors(founders)
       } finally {
@@ -150,27 +132,48 @@ const AdvisoryRequest = () => {
     loadAdvisors()
   }, [])
 
-  // Verificar disponibilidad del horario seleccionado
   useEffect(() => {
     const checkAvailability = async () => {
-      if (!selectedAdvisor || !selectedDate || !selectedTime) {
+      if (!selectedAdvisor) {
+        setHasNoSchedule(false)
         setAvailabilityChecked(false)
         return
       }
 
       try {
         const schedule = await getScheduleByProgrammer(selectedAdvisor)
-        if (schedule?.slots && schedule.slots.length > 0) {
+        const slotsExist = schedule?.slots && schedule.slots.length > 0
+        setHasNoSchedule(!slotsExist)
+
+        // Verificar si el DÍA es válido
+        if (selectedDate && slotsExist) {
+          const dayOk = isProgrammerAvailableOnDate(schedule.slots, selectedDate)
+          setIsDayAvailable(dayOk)
+          if (!dayOk) {
+            setIsSlotAvailable(false)
+            setAvailabilityChecked(true)
+            return
+          }
+        } else {
+          setIsDayAvailable(true)
+        }
+
+        if (!selectedDate || !selectedTime) {
+          setAvailabilityChecked(false)
+          return
+        }
+
+        if (slotsExist) {
           const available = isProgrammerAvailableAtSlot(schedule.slots, selectedDate, selectedTime)
           setIsSlotAvailable(available)
         } else {
-          // Si no hay horario configurado o está vacío, asumir disponible
-          setIsSlotAvailable(true)
+          // Si no hay horario, NO está disponible
+          setIsSlotAvailable(false)
         }
         setAvailabilityChecked(true)
-      } catch (error) {
-        // En caso de error, asumir disponible
-        setIsSlotAvailable(true)
+      } catch {
+        setHasNoSchedule(true)
+        setIsSlotAvailable(false)
         setAvailabilityChecked(true)
       }
     }
@@ -194,7 +197,7 @@ const AdvisoryRequest = () => {
     if (FormUtils.hasErrors(errors)) {
       setFormErrors(errors)
       // Mostrar alerta general opcionalmente
-      // alert('Por favor completa todos los campos requeridos correctamente.')
+
       return
     }
 
@@ -214,7 +217,7 @@ const AdvisoryRequest = () => {
       await addAdvisoryRequest({
         programmerId: selectedAdvisor,
         programmerName: selectedAdvisorData?.name || '',
-        programmerEmail: '', // Se resolverá automáticamente en firestore
+        programmerEmail: '', // Se resolverá automáticamente en backend
         requesterName: formData.name,
         requesterEmail: formData.email,
         slot: {
@@ -226,7 +229,7 @@ const AdvisoryRequest = () => {
       })
 
       setSuccess(true)
-    } catch (error) {
+    } catch {
       // Mostrar error en la UI
       alert('Hubo un error al enviar tu solicitud. Por favor intenta de nuevo.')
     } finally {
@@ -512,10 +515,30 @@ const AdvisoryRequest = () => {
                   <input
                     type="date"
                     value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      let dateVal = e.target.value
+                      if (!dateVal) {
+                        setSelectedDate('')
+                        return
+                      }
+
+                      const [yearStr, month, day] = dateVal.split('-')
+                      const year = parseInt(yearStr)
+                      const currentYear = new Date().getFullYear()
+
+                      // Auto-corrección de año: Si el año no es el actual ni el siguiente, lo forzamos al actual
+                      if (year < currentYear || year > currentYear + 1) {
+                        // Mantenemos mes y día, pero forzamos el año actual
+                        dateVal = `${currentYear}-${month}-${day}`
+                      }
+
+                      setSelectedDate(dateVal)
+                    }}
+                    min={new Date().toLocaleDateString('en-CA')} // Formato local YYYY-MM-DD
+                    max={`${new Date().getFullYear() + 1}-12-31`}
                     required
-                    className="w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body"
+                    disabled={hasNoSchedule}
+                    className={`w-full px-5 py-4 rounded-2xl bg-white border-2 border-[#D4AF37]/20 focus:border-[#D4AF37]/50 focus:ring-4 focus:ring-[#D4AF37]/10 outline-none transition-all font-body ${hasNoSchedule ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
                   />
                 </div>
 
@@ -530,10 +553,11 @@ const AdvisoryRequest = () => {
                         key={time}
                         type="button"
                         onClick={() => setSelectedTime(time)}
+                        disabled={hasNoSchedule || !isDayAvailable}
                         className={`py-2 rounded-xl text-xs font-medium transition-all font-body ${selectedTime === time
                           ? 'text-white'
                           : 'bg-[#FFF8E7] text-base-content/60 hover:bg-[#FFF0D4]'
-                          }`}
+                          } ${hasNoSchedule ? 'opacity-40 cursor-not-allowed' : ''}`}
                         style={selectedTime === time ? { background: 'linear-gradient(to right, #D4AF37, #B8860B)' } : {}}
                       >
                         {formatTimeForDisplay(time)}
@@ -541,17 +565,47 @@ const AdvisoryRequest = () => {
                     ))}
                   </div>
 
-                  {/* Advertencia de disponibilidad */}
-                  {availabilityChecked && selectedAdvisor && selectedDate && selectedTime && !isSlotAvailable && (
+                  {/* Advertencia de No Horario Configurado */}
+                  {hasNoSchedule && (
+                    <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                      <div className="flex items-center gap-2 text-amber-800">
+                        <AlertTriangle className="text-amber-500" size={16} />
+                        <span className="text-sm font-bold">
+                          Sin Disponibilidad Configurada
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Este asesor aún no ha configurado sus horarios de atención. Por favor selecciona otro asesor.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Advertencia de disponibilidad de Día */}
+                  {!isDayAvailable && !hasNoSchedule && selectedDate && (
+                    <div className="mt-4 p-4 rounded-xl bg-orange-50 border border-orange-200">
+                      <div className="flex items-center gap-2 text-orange-800">
+                        <Calendar className="text-orange-500" size={16} />
+                        <span className="text-sm font-medium">
+                          No disponible este día
+                        </span>
+                      </div>
+                      <p className="text-xs text-orange-600 mt-1">
+                        {advisors.find(a => a.id === selectedAdvisor)?.name} no atiende los {new Date(selectedDate + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long' })}s.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Advertencia de disponibilidad de Hora */}
+                  {availabilityChecked && selectedAdvisor && selectedDate && selectedTime && !isSlotAvailable && isDayAvailable && (
                     <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-200">
                       <div className="flex items-center gap-2 text-red-800">
                         <AlertTriangle className="text-red-500" size={16} />
                         <span className="text-sm font-medium">
-                          Este horario no está disponible para {advisors.find(a => a.id === selectedAdvisor)?.name}
+                          Hora no disponible
                         </span>
                       </div>
                       <p className="text-xs text-red-600 mt-1">
-                        Por favor selecciona otro horario o fecha.
+                        Por favor selecciona otro horario.
                       </p>
                     </div>
                   )}

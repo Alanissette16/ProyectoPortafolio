@@ -1,15 +1,14 @@
-/**
- * Gestión de programadores (Admin).
- * Prácticas: Formularios controlados con validación completa y arrays dinámicos, consumo Firestore, feedback DaisyUI.
- */
-import type { DocumentData } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowLeft, Loader2, Save, X, Github, Linkedin, Instagram, Globe } from 'lucide-react'
 import { FiEdit2, FiPlus, FiTrash2, FiUser } from 'react-icons/fi'
-import { storage } from '../../services/firebase.config'
-import { deleteProgrammer, listProgrammers, upsertProgrammer } from '../../services/firestore.service'
 import { FormUtils } from '../../utils/FormUtils'
 import { compressImage, getPhotoURL } from '../../utils/photoStorage'
+import {
+  listProgrammers,
+  upsertProgrammer,
+  deleteProgrammer,
+} from '../../services/data.service'
 
 // Datos base para el formulario de alta/edición
 const initialForm = {
@@ -34,7 +33,7 @@ const initialForm = {
 
 const ProgrammersPage = () => {
   const [form, setForm] = useState(initialForm)
-  const [programmers, setProgrammers] = useState<(DocumentData & { id: string })[]>([])
+  const [programmers, setProgrammers] = useState<(any & { id: string })[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -90,7 +89,32 @@ const ProgrammersPage = () => {
 
   const loadProgrammers = async () => {
     const data = await listProgrammers()
-    setProgrammers(data)
+    const processedData = data.map(dev => {
+      let skills = dev.skills;
+      let socials = dev.socials;
+      let stats = dev.stats;
+
+      try {
+        if (typeof skills === 'string') skills = JSON.parse(skills);
+      } catch (e) {
+        skills = [];
+      }
+
+      try {
+        if (typeof socials === 'string') socials = JSON.parse(socials);
+      } catch (e) {
+        socials = {};
+      }
+
+      try {
+        if (typeof stats === 'string') stats = JSON.parse(stats);
+      } catch (e) {
+        stats = {};
+      }
+
+      return { ...dev, skills, socials, stats };
+    });
+    setProgrammers(processedData)
   }
   useEffect(() => {
     loadProgrammers()
@@ -157,28 +181,20 @@ const ProgrammersPage = () => {
     }
   }
 
-  const uploadPhoto = async (uid: string, file: File): Promise<string> => {
-    try {
-      console.log('📸 Subiendo foto:', file.name, file.type, file.size, 'bytes')
-      const storageRef = ref(storage, `programmers/${uid}/profile.jpg`)
-      console.log('📁 Referencia Storage:', storageRef.fullPath)
-
-      const snapshot = await uploadBytes(storageRef, file)
-      console.log('✅ Foto subida exitosamente:', snapshot.metadata.fullPath)
-
-      const url = await getDownloadURL(storageRef)
-      console.log('🔗 URL obtenida:', url)
-      return url
-    } catch (error: any) {
-      console.error('❌ Error al subir foto:', error)
-      console.error('Código de error:', error.code)
-      console.error('Mensaje:', error.message)
-
-      if (error.code === 'storage/unauthorized') {
-        throw new Error('⚠️ REGLAS DE STORAGE NO APLICADAS. Ve a Firebase Console > Storage > Rules y aplica las reglas.')
+  /* 
+   * Función para convertir imagen a Base64 y simular subida.
+   * NOTA: Esto guarda la imagen como string en la BD. 
+   * Idealmente el backend debería manejar subida de archivos real.
+   */
+  const uploadPhoto = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        resolve(reader.result as string)
       }
-      throw new Error(`No se pudo subir la foto: ${error.message}`)
-    }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -212,16 +228,18 @@ const ProgrammersPage = () => {
 
     try {
       // Generar UID automático si es nuevo, o usar el existente si es edición
-      const uid = editingId || `prog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      // IMPORTANTE: El backend genera IDs numéricos (Long).
+      // Si estamos editando, usamos el ID existente. Si es nuevo, el backend lo genera.
+      // Para mantener compatibilidad con el frontend que espera strings, manejamos la conversión.
+      const uid = editingId || undefined
 
       let photoURL = form.photoURL
 
-      // Guardar foto en localStorage (comprimida)
+      // Guardar foto en localStorage (comprimida) -> CAMBIO: Ahora Base64 directo a BD
       if (photoFile) {
         try {
           // Comprimir imagen antes de guardar
           const compressedBase64 = await compressImage(photoFile, 200, 0.7)
-          localStorage.setItem(`photo_${uid}`, compressedBase64)
           photoURL = compressedBase64
         } catch (compressError) {
           console.error('Error comprimiendo imagen:', compressError)
@@ -253,11 +271,11 @@ const ProgrammersPage = () => {
         bio: form.bio,
         quote: form.quote,
         location: form.location,
-        role: 'programmer',
-        photoURL: photoFile ? `local:${uid}` : form.photoURL,
-        skills: skills.map(s => s.name),
-        socials,
-        stats,
+        role: 'PROGRAMMER',
+        photoURL: photoURL,
+        skills: JSON.stringify(skills), // Send as JSON string
+        socials: JSON.stringify(socials), // Send as JSON string
+        stats: JSON.stringify(stats), // Send as JSON string
       })
       setMessage(editingId ? '✓ Programador actualizado correctamente.' : '✓ Programador guardado correctamente.')
       setForm(initialForm)
@@ -278,8 +296,23 @@ const ProgrammersPage = () => {
     }
   }
 
-  const handleEdit = (dev: DocumentData & { id: string }) => {
+  const handleEdit = (dev: any & { id: string }) => {
     setEditingId(dev.id)
+
+    // Helper to safely parse JSON
+    const safeParse = (str: string | any, fallback: any) => {
+      if (typeof str !== 'string') return str || fallback;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return fallback;
+      }
+    };
+
+    const parsedSocials = safeParse(dev.socials, {});
+    const parsedStats = safeParse(dev.stats, {});
+    const parsedSkills = safeParse(dev.skills, [{ name: 'JavaScript', level: 80 }]);
+
     setForm({
       displayName: dev.displayName || '',
       lastName: dev.lastName || '',
@@ -290,19 +323,21 @@ const ProgrammersPage = () => {
       quote: dev.quote || '',
       role: 'programmer',
       photoURL: dev.photoURL || '',
-      github: dev.socials?.github || '',
-      instagram: dev.socials?.instagram || '',
-      linkedin: dev.socials?.linkedin || '',
-      whatsapp: dev.socials?.whatsapp || '',
-      projects: dev.stats?.projects?.toString() || '0',
-      experience: dev.stats?.experience || '1 año',
-      clients: dev.stats?.clients?.toString() || '0',
+      github: parsedSocials.github || '',
+      instagram: parsedSocials.instagram || '',
+      linkedin: parsedSocials.linkedin || '',
+      whatsapp: parsedSocials.whatsapp || '',
+      projects: parsedStats.projects?.toString() || '0',
+      experience: parsedStats.experience || '1 año',
+      clients: parsedStats.clients?.toString() || '0',
     })
+
     // Convertir skills al formato correcto
-    const loadedSkills = dev.skills || [{ name: 'JavaScript', level: 80 }]
+    const loadedSkills = parsedSkills || [{ name: 'JavaScript', level: 80 }]
     setSkills(Array.isArray(loadedSkills) ? loadedSkills.map((s: any) =>
       typeof s === 'string' ? { name: s, level: 80 } : s
     ) : [{ name: 'JavaScript', level: 80 }])
+
     setPhotoPreview(getPhotoURL(dev.photoURL))
     setFormErrors({})
     setTouched({})
@@ -334,501 +369,321 @@ const ProgrammersPage = () => {
   }
 
   return (
-    <div className="space-y-6 pt-20">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Programadores</h1>
-          <p className="text-base-content/70">
-            Crea o edita perfiles y asigna el rol de programador.
-          </p>
+    <div className="p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-2xl shadow-sm border border-[#D4AF37]/10">
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <Link
+              to="/admin"
+              className="p-2 rounded-xl text-[#8B7355] hover:bg-[#FFF8E7] hover:text-[#D4AF37] transition-all"
+            >
+              <ArrowLeft size={24} />
+            </Link>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-[#5D4E37] tracking-tight">
+                Gestión de Programadores
+              </h1>
+              <p className="text-[#8B7355] text-sm mt-1">
+                Crea, edita y administra los perfiles del equipo técnico
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <form onSubmit={handleSubmit} className="card bg-base-100 shadow-md">
-          <div className="card-body space-y-3">
-            <h2 className="card-title">{editingId ? 'Editar programador' : 'Nuevo programador'}</h2>
-            {message && <div className="alert alert-success text-sm">{message}</div>}
-            {error && <div className="alert alert-error text-sm">{error}</div>}
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Formulario (Izquierda) */}
+          <div className="lg:col-span-12 xl:col-span-5 space-y-6">
+            <div className="bg-white rounded-3xl shadow-xl border border-[#D4AF37]/10 overflow-hidden">
+              <div className="bg-gradient-to-r from-[#FFF8E7] to-[#fff5d6] px-6 py-4 border-b border-[#D4AF37]/10 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-[#5D4E37] flex items-center gap-2">
+                  {editingId ? <FiEdit2 /> : <FiPlus />}
+                  {editingId ? 'Editar Perfil' : 'Nuevo Programador'}
+                </h2>
+                {/* Botón Reset/Cancelar */}
+                {(editingId || form.displayName) && (
+                  <button
+                    onClick={handleCancelEdit}
+                    type="button"
+                    className="text-xs px-3 py-1 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Foto de perfil</span>
-              </label>
-              <div className="flex items-center gap-4">
-                <div className="avatar">
-                  <div className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                    {photoPreview || form.photoURL ? (
-                      <img src={photoPreview || getPhotoURL(form.photoURL)} alt="Preview" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-base-300">
-                        <FiUser className="text-3xl text-base-content/20" />
+              <div className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {message && (
+                    <div className="p-4 rounded-xl bg-green-50 text-green-700 text-sm border border-green-100 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      {message}
+                    </div>
+                  )}
+                  {error && (
+                    <div className="p-4 rounded-xl bg-red-50 text-red-700 text-sm border border-red-100 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      {error}
+                    </div>
+                  )}
+
+                  {/* Foto de Perfil */}
+                  <div className="flex flex-col items-center gap-4 py-4 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                    <div className="relative group cursor-pointer">
+                      <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-white shadow-md">
+                        {photoPreview || form.photoURL ? (
+                          <img src={photoPreview || getPhotoURL(form.photoURL)} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                            <FiUser size={32} />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+                        <span className="text-xs font-medium">Cambiar</span>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-400">Click en la imagen para subir foto</p>
                   </div>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="file-input file-input-bordered file-input-sm w-full max-w-xs"
-                />
-              </div>
-            </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Nombre *</span>
-              </label>
-              <input
-                name="displayName"
-                value={form.displayName}
-                onChange={handleChange}
-                onBlur={() => handleBlur('displayName')}
-                className={`input input-bordered ${touched.displayName && formErrors.displayName ? 'input-error' : ''}`}
-              />
-              {touched.displayName && formErrors.displayName && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.displayName}</span>
-                </label>
-              )}
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Apellido *</span>
-              </label>
-              <input
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-                onBlur={() => handleBlur('lastName')}
-                className={`input input-bordered ${touched.lastName && formErrors.lastName ? 'input-error' : ''}`}
-              />
-              {touched.lastName && formErrors.lastName && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.lastName}</span>
-                </label>
-              )}
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Correo *</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                onBlur={() => handleBlur('email')}
-                className={`input input-bordered ${touched.email && formErrors.email ? 'input-error' : ''}`}
-              />
-              {touched.email && formErrors.email && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.email}</span>
-                </label>
-              )}
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Especialidad *</span>
-              </label>
-              <input
-                name="specialty"
-                value={form.specialty}
-                onChange={handleChange}
-                onBlur={() => handleBlur('specialty')}
-                className={`input input-bordered ${touched.specialty && formErrors.specialty ? 'input-error' : ''}`}
-              />
-              {touched.specialty && formErrors.specialty && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.specialty}</span>
-                </label>
-              )}
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Bio</span>
-              </label>
-              <textarea
-                name="bio"
-                value={form.bio}
-                onChange={handleChange}
-                onBlur={() => handleBlur('bio')}
-                className={`textarea textarea-bordered ${touched.bio && formErrors.bio ? 'textarea-error' : ''}`}
-                rows={3}
-              />
-              {touched.bio && formErrors.bio && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.bio}</span>
-                </label>
-              )}
-            </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="form-control">
+                      <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">Nombre</label>
+                      <input
+                        type="text"
+                        name="displayName"
+                        value={form.displayName}
+                        onChange={handleChange}
+                        onBlur={() => handleBlur('displayName')}
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.displayName && formErrors.displayName ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                          }`}
+                        placeholder="Ej. Ana"
+                      />
+                    </div>
+                    <div className="form-control">
+                      <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">Apellido</label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={form.lastName}
+                        onChange={handleChange}
+                        onBlur={() => handleBlur('lastName')}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                        placeholder="Ej. García"
+                      />
+                    </div>
+                  </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Ubicación</span>
-              </label>
-              <input
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                className="input input-bordered"
-                placeholder="Ej: Guayaquil, Ecuador"
-              />
-            </div>
+                  <div className="form-control">
+                    <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">E-mail</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      onBlur={() => handleBlur('email')}
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.email && formErrors.email ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                        }`}
+                      placeholder="correo@ejemplo.com"
+                    />
+                  </div>
 
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Frase / Quote</span>
-              </label>
-              <input
-                name="quote"
-                value={form.quote}
-                onChange={handleChange}
-                className="input input-bordered"
-                placeholder="Una frase que te represente"
-              />
-            </div>
-
-            {/* Estadísticas */}
-            <div className="divider">Estadísticas</div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Proyectos</span>
-                </label>
-                <input
-                  type="number"
-                  name="projects"
-                  value={form.projects}
-                  onChange={handleChange}
-                  className="input input-bordered"
-                  placeholder="15"
-                  min="0"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Experiencia</span>
-                </label>
-                <input
-                  name="experience"
-                  value={form.experience}
-                  onChange={handleChange}
-                  className="input input-bordered"
-                  placeholder="2 años"
-                />
-              </div>
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Clientes</span>
-                </label>
-                <input
-                  type="number"
-                  name="clients"
-                  value={form.clients}
-                  onChange={handleChange}
-                  className="input input-bordered"
-                  placeholder="10"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            {/* FORMULARIOS DINÁMICOS - Habilidades */}
-            <div className="divider">Habilidades / Skills</div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-bold">Habilidades técnicas *</span>
-              </label>
-
-              {/* Input para agregar nueva habilidad */}
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      onAddSkill()
-                    }
-                  }}
-                  className="input input-bordered flex-1"
-                  placeholder="Nombre de habilidad (ej: TypeScript)"
-                />
-                <input
-                  type="number"
-                  value={newSkillLevel}
-                  onChange={(e) => setNewSkillLevel(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                  className="input input-bordered w-20"
-                  placeholder="Nivel"
-                  min="0"
-                  max="100"
-                />
-                <button
-                  type="button"
-                  onClick={onAddSkill}
-                  className="btn btn-primary"
-                >
-                  <FiPlus /> Agregar
-                </button>
-              </div>
-
-              {/* Lista dinámica de habilidades */}
-              <div className="space-y-2">
-                {skills.map((skill, index) => (
-                  <div key={index} className="flex gap-2 items-center">
+                  <div className="form-control">
+                    <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">Especialidad</label>
                     <input
                       type="text"
-                      value={skill.name}
-                      onChange={(e) => {
-                        const newSkills = [...skills]
-                        newSkills[index] = { ...skill, name: e.target.value }
-                        setSkills(newSkills)
-                      }}
-                      className="input input-bordered flex-1"
+                      name="specialty"
+                      value={form.specialty}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                      placeholder="Ej. Full Stack Developer"
                     />
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={skill.level}
-                      onChange={(e) => {
-                        const newSkills = [...skills]
-                        newSkills[index] = { ...skill, level: parseInt(e.target.value) }
-                        setSkills(newSkills)
-                      }}
-                      className="range range-primary range-sm w-32"
+                  </div>
+
+                  <div className="form-control">
+                    <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">Bio (Resumen)</label>
+                    <textarea
+                      name="bio"
+                      value={form.bio}
+                      onChange={handleChange}
+                      rows={3}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all resize-none"
+                      placeholder="Breve descripción profesional..."
                     />
-                    <span className="text-sm font-medium w-12">{skill.level}%</span>
+                  </div>
+
+                  {/* Skills Section */}
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <label className="text-xs font-bold text-[#8B7355] ml-1 block">Habilidades (Skills)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newSkill}
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        placeholder="Nueva habilidad..."
+                        className="flex-1 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] outline-none text-sm"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newSkillLevel}
+                        onChange={(e) => setNewSkillLevel(Number(e.target.value))}
+                        className="w-20 px-2 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] outline-none text-sm text-center"
+                      />
+                      <button
+                        type="button"
+                        onClick={onAddSkill}
+                        className="px-3 bg-[#D4AF37] text-white rounded-xl hover:bg-[#B5952F] transition-colors"
+                      >
+                        <FiPlus />
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {skills.map((skill, index) => (
+                        <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 rounded-lg text-xs font-medium border border-amber-100">
+                          {typeof skill === 'string' ? skill : `${skill.name} (${skill.level}%)`}
+                          <button
+                            type="button"
+                            onClick={() => onDeleteSkill(index)}
+                            className="text-amber-400 hover:text-red-500 transition-colors"
+                          >
+                            <FiTrash2 size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Stats Section */}
+                  <div className="grid grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#8B7355] uppercase">Proyectos</label>
+                      <input type="text" name="projects" value={form.projects} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="0" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#8B7355] uppercase">Experiencia</label>
+                      <input type="text" name="experience" value={form.experience} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="1 año" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#8B7355] uppercase">Clientes</label>
+                      <input type="text" name="clients" value={form.clients} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm" placeholder="0" />
+                    </div>
+                  </div>
+
+                  {/* Socials */}
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
+                    <label className="text-xs font-bold text-[#8B7355] ml-1 block">Redes Sociales</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <Github size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input type="text" name="github" value={form.github} onChange={handleChange} placeholder="GitHub URL" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-xs" />
+                      </div>
+                      <div className="relative">
+                        <Linkedin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input type="text" name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="LinkedIn URL" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-xs" />
+                      </div>
+                      <div className="relative">
+                        <Instagram size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input type="text" name="instagram" value={form.instagram} onChange={handleChange} placeholder="Instagram URL" className="w-full pl-9 pr-3 py-2 rounded-xl border border-gray-200 text-xs" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4">
                     <button
-                      type="button"
-                      onClick={() => onDeleteSkill(index)}
-                      className="btn btn-error btn-sm"
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3.5 bg-[#D4AF37] hover:bg-[#B5952F] text-white rounded-xl font-bold tracking-wide shadow-lg shadow-[#D4AF37]/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:translate-y-0"
                     >
-                      <FiTrash2 />
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="animate-spin" size={20} /> Guardando...
+                        </span>
+                      ) : (
+                        editingId ? 'Actualizar Programador' : 'Guardar Nuevo Programador'
+                      )}
                     </button>
                   </div>
+
+                </form>
+              </div>
+            </div>
+          </div>
+
+          {/* Listado (Derecha - ocupa más espacio en escritorio) */}
+          <div className="lg:col-span-12 xl:col-span-7 space-y-4">
+            <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-4 border border-[#D4AF37]/5">
+              <h3 className="text-lg font-bold text-[#5D4E37] px-2 mb-4">Equipo Registrado</h3>
+              <div className="space-y-4">
+                {programmers.map((dev) => (
+                  <div key={dev.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group flex flex-col sm:flex-row gap-5 items-start sm:items-center">
+                    <div className="relative">
+                      <img
+                        src={getPhotoURL(dev.photoURL)}
+                        alt={dev.displayName}
+                        className="w-16 h-16 rounded-2xl object-cover shadow-sm ring-2 ring-white"
+                      />
+                      <div className="absolute -bottom-1 -right-1 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                        DEV
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-lg font-bold text-gray-800 truncate">{dev.displayName} {dev.lastName}</h4>
+                      <p className="text-sm text-[#8B7355] truncate">{dev.specialty || 'Programador'}</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {/* Mostrar solo los primeros 3 skills */}
+                        {(Array.isArray(dev.skills) ? dev.skills : []).slice(0, 3).map((s: any, i: number) => (
+                          <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+                            {typeof s === 'string' ? s : s.name}
+                          </span>
+                        ))}
+                        {(Array.isArray(dev.skills) ? dev.skills.length : 0) > 3 && (
+                          <span className="text-[10px] bg-gray-50 text-gray-400 px-2 py-0.5 rounded-md">+{dev.skills.length - 3}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <button
+                        onClick={() => {
+                          handleEdit(dev)
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }}
+                        className="p-2 text-gray-400 hover:text-[#D4AF37] hover:bg-amber-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <FiEdit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(dev.id, dev.displayName || 'Programador')}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar"
+                      >
+                        <FiTrash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
                 ))}
-                {skills.length < 2 && (
-                  <div className="alert alert-warning text-sm">
-                    Debe agregar al menos 2 habilidades
+
+                {programmers.length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <p>No hay programadores registrados aún.</p>
+                    <p className="text-sm mt-2 text-gray-300">Completa el formulario para agregar uno.</p>
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="divider">Redes Sociales</div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">GitHub</span>
-              </label>
-              <input
-                name="github"
-                value={form.github}
-                onChange={handleChange}
-                onBlur={() => handleBlur('github')}
-                className={`input input-bordered ${touched.github && formErrors.github ? 'input-error' : ''}`}
-                placeholder="https://github.com/usuario"
-              />
-              {touched.github && formErrors.github && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.github}</span>
-                </label>
-              )}
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Instagram</span>
-              </label>
-              <input
-                name="instagram"
-                value={form.instagram}
-                onChange={handleChange}
-                onBlur={() => handleBlur('instagram')}
-                className={`input input-bordered ${touched.instagram && formErrors.instagram ? 'input-error' : ''}`}
-                placeholder="https://instagram.com/usuario"
-              />
-              {touched.instagram && formErrors.instagram && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.instagram}</span>
-                </label>
-              )}
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">LinkedIn</span>
-              </label>
-              <input
-                name="linkedin"
-                value={form.linkedin}
-                onChange={handleChange}
-                onBlur={() => handleBlur('linkedin')}
-                className={`input input-bordered ${touched.linkedin && formErrors.linkedin ? 'input-error' : ''}`}
-                placeholder="https://linkedin.com/in/usuario"
-              />
-              {touched.linkedin && formErrors.linkedin && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.linkedin}</span>
-                </label>
-              )}
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">WhatsApp</span>
-              </label>
-              <input
-                name="whatsapp"
-                value={form.whatsapp}
-                onChange={handleChange}
-                onBlur={() => handleBlur('whatsapp')}
-                className={`input input-bordered ${touched.whatsapp && formErrors.whatsapp ? 'input-error' : ''}`}
-                placeholder="https://wa.me/593988888888"
-              />
-              {touched.whatsapp && formErrors.whatsapp && (
-                <label className="label">
-                  <span className="label-text-alt text-error">{formErrors.whatsapp}</span>
-                </label>
-              )}
-            </div>
-
-            <div className="card-actions justify-end gap-2">
-              {editingId && (
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  onClick={handleCancelEdit}
-                >
-                  Cancelar
-                </button>
-              )}
-              <button className="btn btn-primary" type="submit" disabled={loading}>
-                {loading ? 'Guardando...' : editingId ? 'Actualizar' : 'Guardar programador'}
-              </button>
-            </div>
           </div>
-        </form>
 
-        <div className="card bg-base-100 shadow-md">
-          <div className="card-body space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="card-title">Listado</h2>
-              <span className="badge badge-secondary">{programmers.length}</span>
-            </div>
-            <div className="space-y-2">
-              {programmers.map((dev) => (
-                <div key={dev.id} className="flex flex-col rounded-lg border border-base-200 p-3">
-                  <div className="flex items-start gap-3">
-                    <div className="avatar">
-                      <div className="w-12 rounded-full">
-                        {dev.photoURL ? (
-                          <img src={getPhotoURL(dev.photoURL)} alt={dev.displayName} />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-base-300">
-                            <FiUser className="text-lg text-base-content/20" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold">{dev.displayName}</p>
-                        <span className="badge badge-outline capitalize">
-                          {dev.specialty || 'Especialidad'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-base-content/60">{dev.email}</p>
-                      <p className="text-sm text-base-content/70">{dev.bio}</p>
-
-                      {/* Habilidades */}
-                      {dev.skills && dev.skills.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-xs font-semibold text-base-content/70 mb-1">Habilidades:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {dev.skills.map((skill: any, idx: number) => (
-                              <span key={idx} className="badge badge-primary badge-sm">
-                                {typeof skill === 'string' ? skill : skill.name}
-                                {typeof skill !== 'string' && skill.level ? ` ${skill.level}%` : ''}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {dev.socials && (
-                        <div className="mt-2 flex gap-2">
-                          {dev.socials.github && (
-                            <a
-                              href={dev.socials.github}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="badge badge-ghost badge-sm"
-                            >
-                              GitHub
-                            </a>
-                          )}
-                          {dev.socials.instagram && (
-                            <a
-                              href={dev.socials.instagram}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="badge badge-ghost badge-sm"
-                            >
-                              Instagram
-                            </a>
-                          )}
-                          {dev.socials.whatsapp && (
-                            <a
-                              href={dev.socials.whatsapp}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="badge badge-ghost badge-sm"
-                            >
-                              WhatsApp
-                            </a>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Botones de acción */}
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          onClick={() => handleEdit(dev)}
-                          className="btn btn-sm btn-primary gap-2"
-                        >
-                          <FiEdit2 className="h-4 w-4" />
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(dev.id, dev.displayName)}
-                          className="btn btn-sm btn-error gap-2"
-                        >
-                          <FiTrash2 className="h-4 w-4" />
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {!programmers.length && (
-                <div className="alert alert-info text-sm">
-                  Aún no hay programadores. Crea uno con el formulario.
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>
   )
 }
+
 
 export default ProgrammersPage

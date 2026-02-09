@@ -19,7 +19,7 @@ import {
   X
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { listAllProjects } from '../../services/firestore.service'
+import { listAllProjects } from '../../services/data.service'
 import SEOHead from '../../components/common/SEOHead'
 
 // Interfaz para proyectos
@@ -41,102 +41,12 @@ interface ProjectType {
 
 const categories = ['Todos', 'E-commerce', 'Mobile App', 'Web Design', 'Branding', 'Dashboard', 'academico', 'laboral']
 
-// Colores para asignar a proyectos de Firestore
+// Colores para asignar a proyectos del Backend
 const projectColors = ['pink', 'purple', 'rose', 'amber', 'emerald', 'cyan']
 
 // Proyectos de ejemplo (siempre se muestran)
-const exampleProjects: ProjectType[] = [
-  {
-    id: 'example-1',
-    title: 'Bloom Beauty',
-    description: 'E-commerce de productos de belleza con diseño minimalista y experiencia de compra fluida.',
-    longDescription: 'Plataforma completa de comercio electrónico especializada en productos de belleza y cuidado personal. Incluye catálogo dinámico, carrito de compras, pasarela de pagos y panel de administración.',
-    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800',
-    category: 'E-commerce',
-    tags: ['React', 'Node.js', 'Stripe', 'MongoDB'],
-    client: 'Bloom Beauty Co.',
-    year: '2024',
-    featured: true,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'pink'
-  },
-  {
-    id: 'example-2',
-    title: 'Wellness App',
-    description: 'Aplicación móvil de bienestar con seguimiento de hábitos, meditaciones y ejercicios.',
-    longDescription: 'App móvil diseñada para el bienestar integral. Incluye tracker de hábitos, biblioteca de meditaciones guiadas, rutinas de ejercicio y análisis de progreso personal.',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800',
-    category: 'Mobile App',
-    tags: ['React Native', 'Firebase', 'TypeScript'],
-    client: 'WellnessLife',
-    year: '2024',
-    featured: true,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'purple'
-  },
-  {
-    id: 'example-3',
-    title: 'Studio Creativo',
-    description: 'Portafolio digital para agencia de diseño con animaciones elegantes.',
-    longDescription: 'Sitio web de portafolio para agencia creativa con animaciones fluidas, galería de proyectos interactiva y sistema de contacto integrado.',
-    image: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800',
-    category: 'Web Design',
-    tags: ['Next.js', 'Framer Motion', 'TailwindCSS'],
-    client: 'Studio Luna',
-    year: '2023',
-    featured: false,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'rose'
-  },
-  {
-    id: 'example-4',
-    title: 'Café Artesanal',
-    description: 'Sistema de pedidos online para cafetería con diseño cálido y acogedor.',
-    longDescription: 'Plataforma de pedidos para cafetería artesanal con menú digital, sistema de reservaciones, programa de lealtad y gestión de inventario.',
-    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800',
-    category: 'E-commerce',
-    tags: ['Vue.js', 'Supabase', 'Stripe'],
-    client: 'Café Origen',
-    year: '2023',
-    featured: false,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'amber'
-  },
-  {
-    id: 'example-5',
-    title: 'Fashion Brand',
-    description: 'Rediseño de marca y tienda online para boutique de moda sostenible.',
-    longDescription: 'Proyecto integral de branding y desarrollo web para marca de moda sostenible. Incluye identidad visual, tienda online y estrategia de contenido.',
-    image: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=800',
-    category: 'Branding',
-    tags: ['Figma', 'Shopify', 'Adobe Suite'],
-    client: 'Verde Moda',
-    year: '2024',
-    featured: true,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'emerald'
-  },
-  {
-    id: 'example-6',
-    title: 'Health Dashboard',
-    description: 'Dashboard de salud con visualización de datos y métricas personalizadas.',
-    longDescription: 'Panel de control de salud con integración de dispositivos wearables, visualización de métricas vitales y generación de reportes médicos.',
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800',
-    category: 'Dashboard',
-    tags: ['React', 'D3.js', 'Python', 'PostgreSQL'],
-    client: 'HealthTech',
-    year: '2023',
-    featured: false,
-    liveUrl: '#',
-    githubUrl: '#',
-    color: 'cyan'
-  }
-]
+// Proyectos de ejemplo eliminados para usar solo backend
+const exampleProjects: ProjectType[] = []
 
 const Projects = () => {
   const [projects, setProjects] = useState<ProjectType[]>(exampleProjects)
@@ -146,14 +56,14 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Cargar proyectos de Firestore y combinar con los de ejemplo
+  // Cargar proyectos del Backend y combinar con los de ejemplo
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const firestoreProjects = await listAllProjects()
+        const backendProjects = await listAllProjects()
 
-        // Convertir proyectos de Firestore al formato esperado
-        const convertedProjects: ProjectType[] = firestoreProjects.map((proj: any, index: number) => {
+        // Convertir proyectos del Backend al formato esperado
+        const convertedProjects: ProjectType[] = backendProjects.map((proj: any, index: number) => {
           // Obtener imagen de localStorage si existe
           const localImage = localStorage.getItem(`project_img_${proj.id}`)
 
@@ -179,11 +89,11 @@ const Projects = () => {
           }
         })
 
-        // Combinar proyectos de ejemplo + proyectos de Firestore
+        // Combinar proyectos de ejemplo + proyectos del Backend
         const allProjects = [...exampleProjects, ...convertedProjects]
         setProjects(allProjects)
         setFilteredProjects(allProjects)
-      } catch (error) {
+      } catch {
         // En caso de error, mantener los proyectos de ejemplo
         setProjects(exampleProjects)
         setFilteredProjects(exampleProjects)

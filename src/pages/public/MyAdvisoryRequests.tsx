@@ -3,11 +3,17 @@
  * SEGURO: Requiere autenticación y solo muestra las solicitudes del usuario logueado.
  */
 import { useState, FormEvent, useEffect } from 'react'
-import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore'
-import { db } from '../../services/firebase.config'
-import { addAdvisoryRequest, listProgrammers } from '../../services/firestore.service'
+import { addAdvisoryRequest, listProgrammers, listMyAdvisories } from '../../services/data.service'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { Download, FileText } from 'lucide-react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
+
+// Extend jsPDF for autotable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDF;
+}
 
 const initialForm = {
   programmerId: '',
@@ -19,29 +25,24 @@ const initialForm = {
 }
 
 const MyAdvisoryRequests = () => {
-  const { user, isAuthenticated, role } = useAuth()
+  const { user, isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
-  const [requests, setRequests] = useState<(DocumentData & { id: string })[]>([])
+  const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showNewRequestForm, setShowNewRequestForm] = useState(false)
   const [form, setForm] = useState(initialForm)
-  const [programmers, setProgrammers] = useState<(DocumentData & { id: string })[]>([])
+  const [programmers, setProgrammers] = useState<any[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
-  // Redirigir si no está autenticado o no es usuario external
+  // Redirigir si no está autenticado
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !loading) {
       navigate('/login')
-      return
     }
-    if (role !== 'external') {
-      navigate('/')
-      return
-    }
-  }, [isAuthenticated, role, navigate])
+  }, [isAuthenticated, loading, navigate])
 
   // Cargar programadores
   useEffect(() => {
@@ -51,25 +52,19 @@ const MyAdvisoryRequests = () => {
   // Cargar solicitudes automáticamente del usuario autenticado
   useEffect(() => {
     const loadUserRequests = async () => {
-      if (!user?.email) return
-
+      // No need to check user.email, backend handles it with token
       setLoading(true)
       setError('')
 
       try {
-        const q = query(
-          collection(db, 'advisories'),
-          where('requesterEmail', '==', user.email)
-        )
-        const snapshot = await getDocs(q)
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        const data = await listMyAdvisories()
         setRequests(data)
 
         // Pre-llenar el formulario con los datos del usuario
         setForm(prev => ({
           ...prev,
-          requesterEmail: user.email || '',
-          requesterName: user.displayName || ''
+          requesterEmail: user?.email || '',
+          requesterName: user?.displayName || ''
         }))
       } catch (err) {
         console.error('Error al cargar solicitudes:', err)
@@ -79,10 +74,10 @@ const MyAdvisoryRequests = () => {
       }
     }
 
-    if (isAuthenticated && user && role === 'external') {
+    if (isAuthenticated) {
       loadUserRequests()
     }
-  }, [user, isAuthenticated, role])
+  }, [user, isAuthenticated])
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -101,7 +96,7 @@ const MyAdvisoryRequests = () => {
     setMessage('')
 
     try {
-      const selectedProgrammer = programmers.find((p) => p.id === form.programmerId)
+      const selectedProgrammer = programmers.find((p) => p.id === Number(form.programmerId)) // ID might be number now from backend
 
       await addAdvisoryRequest({
         programmerId: form.programmerId,
@@ -122,15 +117,9 @@ const MyAdvisoryRequests = () => {
       setShowNewRequestForm(false)
 
       // Recargar solicitudes
-      if (user?.email) {
-        const q = query(
-          collection(db, 'advisories'),
-          where('requesterEmail', '==', user.email)
-        )
-        const snapshot = await getDocs(q)
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        setRequests(data)
-      }
+      const data = await listMyAdvisories()
+      setRequests(data)
+
     } catch (err) {
       console.error('Error al enviar solicitud:', err)
       setError('No se pudo enviar la solicitud. Intenta nuevamente.')
@@ -154,8 +143,47 @@ const MyAdvisoryRequests = () => {
   }
 
   const getProgrammerName = (programmerId: string) => {
-    const programmer = programmers.find(p => p.id === programmerId)
+    const programmer = programmers.find(p => p.id === Number(programmerId) || p.id === programmerId)
     return programmer?.displayName || 'Programador'
+  }
+
+  const generatePDF = () => {
+    try {
+      const doc = new jsPDF() as jsPDFWithAutoTable
+
+      // Header
+      doc.setFontSize(22)
+      doc.setTextColor(30, 41, 59) // Slate-800
+      doc.text('Mis Solicitudes de Asesoría', 20, 20)
+
+      doc.setFontSize(12)
+      doc.setTextColor(71, 85, 105) // Slate-600
+      doc.text(`Usuario: ${user?.displayName || 'N/A'}`, 20, 30)
+      doc.text(`Fecha de generación: ${new Date().toLocaleDateString()}`, 20, 37)
+
+      const tableRows = requests.map(req => [
+        getProgrammerName(req.programmerId),
+        req.slot?.date || 'N/A',
+        req.slot?.time || 'N/A',
+        req.status.toUpperCase(),
+        req.note || ''
+      ])
+
+      autoTable(doc, {
+        startY: 45,
+        head: [['Programador', 'Fecha', 'Hora', 'Estado', 'Mi Nota']],
+        body: tableRows,
+        headStyles: {
+          fillColor: [59, 130, 246], // Blue-500
+          textColor: [255, 255, 255]
+        }
+      })
+
+      doc.save(`mis_asesorias_${new Date().getTime()}.pdf`)
+    } catch (err) {
+      console.error('Error generating PDF:', err)
+      alert('Error al generar el PDF.')
+    }
   }
 
   // Mostrar loading mientras se autentica o carga
@@ -185,14 +213,24 @@ const MyAdvisoryRequests = () => {
           <h2 className="text-xl font-semibold">
             {loading ? 'Cargando...' : requests.length === 0 ? 'No tienes solicitudes' : `${requests.length} solicitud(es)`}
           </h2>
-          {!showNewRequestForm && (
-            <Link
-              to="/agendar-asesoria"
-              className="btn btn-primary btn-sm"
-            >
-              + Nueva Solicitud
-            </Link>
-          )}
+          <div className="flex gap-2">
+            {requests.length > 0 && (
+              <button
+                onClick={generatePDF}
+                className="btn btn-outline btn-sm gap-2"
+              >
+                <Download size={16} /> Exportar Mis Solicitudes
+              </button>
+            )}
+            {!showNewRequestForm && (
+              <Link
+                to="/agendar-asesoria"
+                className="btn btn-primary btn-sm"
+              >
+                + Nueva Solicitud
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Formulario de nueva solicitud */}
@@ -329,11 +367,6 @@ const MyAdvisoryRequests = () => {
         {requests.length > 0 ? (
           <div className="space-y-3">
             {requests
-              .sort((a, b) => {
-                const dateA = a.createdAt?.toMillis?.() || 0
-                const dateB = b.createdAt?.toMillis?.() || 0
-                return dateB - dateA
-              })
               .map((request) => (
                 <div key={request.id} className="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
                   <div className="card-body">
@@ -377,7 +410,7 @@ const MyAdvisoryRequests = () => {
                     )}
 
                     <div className="text-xs text-base-content/50 mt-2">
-                      Solicitada: {request.createdAt?.toDate?.().toLocaleDateString('es-ES') || 'Fecha no disponible'}
+                      Solicitada: {request.createdAt}
                     </div>
                   </div>
                 </div>

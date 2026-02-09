@@ -7,7 +7,7 @@ import { ArrowRight, Briefcase, FolderOpen, MessageSquare, Sparkles, User } from
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { listAdvisoriesByProgrammer } from '../../services/firestore.service'
+import { listAdvisoriesByProgrammer, listProjectsByOwner } from '../../services/data.service'
 
 const ProgrammerDashboard = () => {
   const containerVariants = {
@@ -65,145 +65,185 @@ const ProgrammerDashboard = () => {
   // Sincronizar asesorías pendientes
   const { user } = useAuth()
   const [pendingCount, setPendingCount] = useState<number>(0)
+  const [projects, setProjects] = useState<any[]>([])
   useEffect(() => {
     const fetchAdvisories = async () => {
       if (!user) return
       try {
-        const advisories = await listAdvisoriesByProgrammer(user.uid, user.email ?? undefined)
+        const advisories = await listAdvisoriesByProgrammer()
         const pendientes = advisories.filter((a: any) => a.status === 'pendiente')
         setPendingCount(pendientes.length)
-      } catch (err) {
+      } catch {
         setPendingCount(0)
       }
     }
     fetchAdvisories()
   }, [user])
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (!user?.uid) return
+      try {
+        const userProjects = await listProjectsByOwner(user.uid)
+        setProjects(userProjects)
+      } catch (err) {
+        console.error('Error loading projects:', err)
+        setProjects([])
+      }
+    }
+    fetchProjects()
+  }, [user?.uid])
+
   return (
-  <div className="min-h-screen bg-gradient-to-br from-[#FFF9F4] via-[#FFF4E7] to-[#FFE7C7] px-6 pt-20">
-    <motion.div 
-      className="space-y-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Welcome Banner */}
-      <motion.div 
-        variants={itemVariants}
-        className="relative overflow-hidden rounded-3xl p-8 border border-[#D4AF37]/20"
-        style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(184, 134, 11, 0.05), rgba(255, 250, 240, 0.8))' }}
+    <div className="p-6 md:p-8">
+      <motion.div
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <div className="absolute top-4 right-4 animate-pulse">
-          <Sparkles className="text-[#D4AF37]" size={28} />
-        </div>
-        <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-gradient-to-br from-[#D4AF37]/20 to-transparent rounded-full blur-2xl" />
-        
-        <div className="relative ">
-          <h1 className="text-3xl font-display font-bold text-[#5D4E37] mb-2">
-            ¡Bienvenida de vuelta! ✨
-          </h1>
-          <p className="text-[#8B7355] font-body max-w-2xl">
-            Completa tu portafolio y publica proyectos para que sean visibles en la página pública. 
-            Tu perfil profesional es tu carta de presentación.
-          </p>
-        </div>
-      </motion.div>
+        {/* Welcome Banner */}
+        <motion.div
+          variants={itemVariants}
+          className="relative overflow-hidden rounded-3xl p-8 border border-[#D4AF37]/20"
+          style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(184, 134, 11, 0.05), rgba(255, 250, 240, 0.8))' }}
+        >
+          <div className="absolute top-4 right-4 animate-pulse">
+            <Sparkles className="text-[#D4AF37]" size={28} />
+          </div>
+          <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-gradient-to-br from-[#D4AF37]/20 to-transparent rounded-full blur-2xl" />
 
-      {/* Quick Stats */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
-          <p className="text-2xl font-display font-bold text-[#5D4E37]">142</p>
-          <p className="text-sm text-[#8B7355] font-body">Visitas al Perfil</p>
-          <span className="text-xs text-[#D4AF37] font-semibold">+12%</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
-          <p className="text-2xl font-display font-bold text-[#5D4E37]">8</p>
-          <p className="text-sm text-[#8B7355] font-body">Proyectos</p>
-          <span className="text-xs text-[#D4AF37] font-semibold">+2</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
-          <p className="text-2xl font-display font-bold text-[#5D4E37]">{pendingCount}</p>
-          <p className="text-sm text-[#8B7355] font-body">Asesorías Pendientes</p>
-          <span className="text-xs text-[#D4AF37] font-semibold">Nuevas</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
-          <p className="text-2xl font-display font-bold text-[#5D4E37]">4.9</p>
-          <p className="text-sm text-[#8B7355] font-body">Valoración</p>
-          <span className="text-xs text-[#D4AF37] font-semibold">⭐</span>
-        </div>
-      </motion.div>
+          <div className="relative ">
+            <h1 className="text-3xl font-display font-bold text-[#5D4E37] mb-2">
+              ¡Bienvenida de vuelta! ✨
+            </h1>
+            <p className="text-[#8B7355] font-body max-w-2xl">
+              Completa tu portafolio y publica proyectos para que sean visibles en la página pública.
+              Tu perfil profesional es tu carta de presentación.
+            </p>
+          </div>
+        </motion.div>
 
-      {/* Action Cards Grid */}
-      <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {dashboardCards.map((card, index) => (
-          <motion.div
-            key={card.title}
-            variants={itemVariants}
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            className="group relative overflow-hidden rounded-2xl bg-white border border-[#D4AF37]/15 shadow-lg hover:shadow-xl transition-all duration-300"
+        {/* Quick Stats */}
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
+            <p className="text-2xl font-display font-bold text-[#5D4E37]">142</p>
+            <p className="text-sm text-[#8B7355] font-body">Visitas al Perfil</p>
+            <span className="text-xs text-[#D4AF37] font-semibold">+12%</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
+            <p className="text-2xl font-display font-bold text-[#5D4E37]">{projects.length}</p>
+            <p className="text-sm text-[#8B7355] font-body">Proyectos</p>
+            <span className="text-xs text-[#D4AF37] font-semibold">+2</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
+            <p className="text-2xl font-display font-bold text-[#5D4E37]">{pendingCount}</p>
+            <p className="text-sm text-[#8B7355] font-body">Asesorías Pendientes</p>
+            <span className="text-xs text-[#D4AF37] font-semibold">Nuevas</span>
+          </div>
+          <div className="p-4 rounded-2xl bg-white border border-[#D4AF37]/15 shadow-sm hover:shadow-md transition-all">
+            <p className="text-2xl font-display font-bold text-[#5D4E37]">4.9</p>
+            <p className="text-sm text-[#8B7355] font-body">Valoración</p>
+            <span className="text-xs text-[#D4AF37] font-semibold">⭐</span>
+          </div>
+        </motion.div>
+
+        {/* Ver Portafolio Público - Featured Button */}
+        <motion.div variants={itemVariants}>
+          <Link
+            to={`/portafolio/${user?.uid}`}
+            className="block group relative overflow-hidden rounded-2xl p-6 border-2 border-[#D4AF37] bg-gradient-to-r from-[#D4AF37]/10 to-[#B8860B]/5 hover:shadow-xl transition-all duration-300"
           >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-            
-            <div className="relative p-6">
-              {/* Icon */}
-              <div 
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br ${card.gradient}`}
-              >
-                <card.icon className="text-white" size={26} />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#B8860B]">
+                  <User className="text-white" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-display font-bold text-[#5D4E37] group-hover:text-[#D4AF37] transition-colors">
+                    Ver mi Portafolio Público
+                  </h3>
+                  <p className="text-sm text-[#8B7355] font-body">
+                    Mira cómo los visitantes ven tu perfil profesional
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="text-[#D4AF37] group-hover:translate-x-2 transition-transform" size={24} />
+            </div>
+          </Link>
+        </motion.div>
+
+        {/* Action Cards Grid */}
+        <motion.div variants={itemVariants} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {dashboardCards.map((card) => (
+            <motion.div
+              key={card.title}
+              variants={itemVariants}
+              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              className="group relative overflow-hidden rounded-2xl bg-white border border-[#D4AF37]/15 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              {/* Background Gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+              <div className="relative p-6">
+                {/* Icon */}
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 bg-gradient-to-br ${card.gradient}`}
+                >
+                  <card.icon className="text-white" size={26} />
+                </div>
+
+                {/* Content */}
+                <h2 className="text-lg font-display font-bold text-[#5D4E37] mb-2">
+                  {card.title}
+                </h2>
+                <p className="text-sm text-[#8B7355] font-body mb-4 leading-relaxed">
+                  {card.description}
+                </p>
+
+                {/* Action Button */}
+                <Link
+                  to={card.link}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm font-body transition-all hover:scale-105 bg-gradient-to-r ${card.gradient}`}
+                >
+                  {card.buttonText}
+                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
 
-              {/* Content */}
-              <h2 className="text-lg font-display font-bold text-[#5D4E37] mb-2">
-                {card.title}
-              </h2>
-              <p className="text-sm text-[#8B7355] font-body mb-4 leading-relaxed">
-                {card.description}
-              </p>
-
-              {/* Action Button */}
-              <Link 
-                to={card.link}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm font-body transition-all hover:scale-105 bg-gradient-to-r ${card.gradient}`}
-              >
-                {card.buttonText}
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Decorative Corner */}
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-full" />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Tips Section */}
-      <motion.div 
-        variants={itemVariants}
-        className="rounded-2xl p-6 border border-[#D4AF37]/20"
-        style={{ background: 'linear-gradient(135deg, rgba(255, 250, 240, 0.9), rgba(255, 248, 231, 0.9))' }}
-      >
-        <h3 className="text-lg font-display font-bold text-[#5D4E37] mb-4 flex items-center gap-2">
-          <Sparkles className="text-[#D4AF37]" size={20} />
-          Consejos para destacar
-        </h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            'Añade una foto profesional y una bio que refleje tu personalidad',
-            'Mantén actualizados tus proyectos con capturas y descripciones detalladas',
-            'Responde a las solicitudes de asesoría en menos de 24 horas'
-          ].map((tip, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
-                {index + 1}
-              </div>
-              <p className="text-sm text-[#5D4E37]/80 font-body">{tip}</p>
-            </div>
+              {/* Decorative Corner */}
+              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-full" />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
+
+        {/* Tips Section */}
+        <motion.div
+          variants={itemVariants}
+          className="rounded-2xl p-6 border border-[#D4AF37]/20"
+          style={{ background: 'linear-gradient(135deg, rgba(255, 250, 240, 0.9), rgba(255, 248, 231, 0.9))' }}
+        >
+          <h3 className="text-lg font-display font-bold text-[#5D4E37] mb-4 flex items-center gap-2">
+            <Sparkles className="text-[#D4AF37]" size={20} />
+            Consejos para destacar
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              'Añade una foto profesional y una bio que refleje tu personalidad',
+              'Mantén actualizados tus proyectos con capturas y descripciones detalladas',
+              'Responde a las solicitudes de asesoría en menos de 24 horas'
+            ].map((tip, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: 'linear-gradient(135deg, #D4AF37, #B8860B)' }}>
+                  {index + 1}
+                </div>
+                <p className="text-sm text-[#5D4E37]/80 font-body">{tip}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
-  </div>
+    </div>
   )
 }
 
