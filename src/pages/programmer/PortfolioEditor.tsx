@@ -5,7 +5,8 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { FiUser, FiBookOpen, FiCode, FiTag, FiDroplet, FiEye, FiSave } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
-import { getPortfolio, upsertPortfolio } from '../../services/data.service'
+import { getUserProfile, upsertPortfolio, getPortfolio } from '../../services/data.service'
+import { FormUtils } from '../../utils/FormUtils'
 
 const initial = {
   headline: '',
@@ -21,6 +22,7 @@ const PortfolioEditor = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [showPreview, setShowPreview] = useState(true)
 
   // Parse skills/tags for preview
@@ -84,6 +86,21 @@ const PortfolioEditor = () => {
     setLoading(true)
     setMessage('')
     setError('')
+    setFormErrors({})
+
+    const rules = {
+      headline: [FormUtils.required],
+      about: [FormUtils.required, (v: string) => FormUtils.minLength(v, 20)],
+    }
+
+    const validationErrors = FormUtils.validateForm(form, rules)
+    setFormErrors(validationErrors)
+
+    if (FormUtils.hasErrors(validationErrors)) {
+      setLoading(false)
+      return
+    }
+
     try {
       const skillsArray = form.skills.split(',').map((s) => s.trim()).filter(Boolean)
       const tagsArray = form.tags.split(',').map((s) => s.trim()).filter(Boolean)
@@ -156,10 +173,11 @@ const PortfolioEditor = () => {
                   name="headline"
                   value={form.headline}
                   onChange={handleChange}
-                  className="input input-bordered focus:input-primary"
+                  className={`input input-bordered focus:input-primary ${formErrors.headline ? 'input-error' : ''}`}
                   placeholder="Desarrollador Full Stack | React & Node.js"
                   required
                 />
+                {formErrors.headline && <span className="text-error text-xs mt-1">{formErrors.headline}</span>}
                 <label className="label">
                   <span className="label-text-alt text-base-content/60">
                     Tu título profesional en una línea
@@ -179,9 +197,16 @@ const PortfolioEditor = () => {
                   name="about"
                   value={form.about}
                   onChange={handleChange}
-                  className="textarea textarea-bordered focus:textarea-primary h-28"
-                  placeholder="Cuéntanos sobre ti, tu experiencia y qué te apasiona..."
+                  className={`textarea textarea-bordered h-24 focus:textarea-primary ${formErrors.about ? 'textarea-error' : ''}`}
+                  placeholder="Soy un apasionado por la tecnología..."
+                  required
                 />
+                {formErrors.about && <span className="text-error text-xs mt-1">{formErrors.about}</span>}
+                <label className="label">
+                  <span className="label-text-alt text-base-content/60">
+                    Cuéntanos sobre ti, tu experiencia y qué te apasiona...
+                  </span>
+                </label>
               </div>
 
               {/* Skills */}

@@ -89,7 +89,7 @@ const ProgrammersPage = () => {
 
   const loadProgrammers = async () => {
     const data = await listProgrammers()
-    const processedData = data.map(dev => {
+    const processedData = data.map((dev: any) => {
       let skills = dev.skills;
       let socials = dev.socials;
       let stats = dev.stats;
@@ -461,6 +461,7 @@ const ProgrammersPage = () => {
                           }`}
                         placeholder="Ej. Ana"
                       />
+                      {touched.displayName && formErrors.displayName && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.displayName}</p>}
                     </div>
                     <div className="form-control">
                       <label className="text-xs font-bold text-[#8B7355] ml-1 mb-1.5 block">Apellido</label>
@@ -470,9 +471,11 @@ const ProgrammersPage = () => {
                         value={form.lastName}
                         onChange={handleChange}
                         onBlur={() => handleBlur('lastName')}
-                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                        className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.lastName && formErrors.lastName ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                          }`}
                         placeholder="Ej. García"
                       />
+                      {touched.lastName && formErrors.lastName && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.lastName}</p>}
                     </div>
                   </div>
 
@@ -484,10 +487,11 @@ const ProgrammersPage = () => {
                       value={form.email}
                       onChange={handleChange}
                       onBlur={() => handleBlur('email')}
-                      className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.email && formErrors.email ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.email && formErrors.email ? 'border-red-300 input-error' : 'border-gray-200 focus:border-[#D4AF37]'
                         }`}
                       placeholder="correo@ejemplo.com"
                     />
+                    {touched.email && formErrors.email && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.email}</p>}
                   </div>
 
                   <div className="form-control">
@@ -497,9 +501,11 @@ const ProgrammersPage = () => {
                       name="specialty"
                       value={form.specialty}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all"
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.specialty && formErrors.specialty ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                        }`}
                       placeholder="Ej. Full Stack Developer"
                     />
+                    {touched.specialty && formErrors.specialty && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.specialty}</p>}
                   </div>
 
                   <div className="form-control">
@@ -509,9 +515,11 @@ const ProgrammersPage = () => {
                       value={form.bio}
                       onChange={handleChange}
                       rows={3}
-                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all resize-none"
+                      className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all resize-none ${touched.bio && formErrors.bio ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'
+                        }`}
                       placeholder="Breve descripción profesional..."
                     />
+                    {touched.bio && formErrors.bio && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.bio}</p>}
                   </div>
 
                   {/* Skills Section */}
@@ -555,6 +563,7 @@ const ProgrammersPage = () => {
                         </span>
                       ))}
                     </div>
+                    {formErrors.skills && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.skills}</p>}
                   </div>
 
                   {/* Stats Section */}
@@ -680,8 +689,8 @@ const ProgrammersPage = () => {
           </div>
 
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }
 

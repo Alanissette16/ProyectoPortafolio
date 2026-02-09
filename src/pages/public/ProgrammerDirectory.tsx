@@ -18,12 +18,14 @@ import {
   Palette,
   Phone,
   Quote,
-  Sparkles
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getScheduleByProgrammer, listProgrammers } from '../../services/data.service'
+import { getScheduleByProgrammer, listProgrammersPaginated } from '../../services/data.service'
 import { getPhotoURL } from '../../utils/photoStorage'
 import SEOHead from '../../components/common/SEOHead'
 
@@ -62,6 +64,8 @@ const ProgrammerDirectory = () => {
 
   const canRequestAdvisory = !isAuthenticated || (role !== 'admin' && role !== 'programmer')
   const [backendProgrammers, setBackendProgrammers] = useState<TeamMember[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const [scheduleModal, setScheduleModal] = useState<{ open: boolean; member: TeamMember | null; schedule: any[] }>({
     open: false,
     member: null,
@@ -75,7 +79,9 @@ const ProgrammerDirectory = () => {
   useEffect(() => {
     const loadProgrammers = async () => {
       try {
-        const programmers = await listProgrammers()
+        const response: any = await listProgrammersPaginated(currentPage, 6) // Asume 6 por página
+        const programmers = response.content || []
+        setTotalPages(response.totalPages || 0)
 
         // Convertir a formato TeamMember
         const converted: TeamMember[] = programmers.map((prog: any, index: number) => {
@@ -143,7 +149,7 @@ const ProgrammerDirectory = () => {
     }
 
     loadProgrammers()
-  }, [])
+  }, [currentPage]) // Recargar cuando cambia la página
 
   // Combinar fundadoras + programadores del Backend
   const team = [...founders, ...backendProgrammers]
@@ -410,10 +416,35 @@ const ProgrammerDirectory = () => {
                     </button>
                   </div>
                 </div>
+
+
               </div>
             </motion.div>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-4 mt-12">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <span className="text-base-content/70 font-medium">
+              Página {currentPage + 1} de {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1}
+              className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+        )}
 
         {/* CTA Section */}
         <motion.div

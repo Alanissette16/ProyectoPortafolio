@@ -34,6 +34,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [isRegisterMode, setIsRegisterMode] = useState(false)
   const navigate = useNavigate()
   const { login, register } = useAuth()
@@ -43,6 +44,7 @@ const LoginPage = () => {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setFormErrors({})
 
     // Reglas de validación
     const loginRules = {
@@ -60,11 +62,12 @@ const LoginPage = () => {
 
     // Validar
     const validationErrors = FormUtils.validateForm(formData, rules)
+    setFormErrors(validationErrors)
 
     if (FormUtils.hasErrors(validationErrors)) {
       // Priorizar mostrar el primer error encontrado
       const firstErrorKey = Object.keys(validationErrors)[0]
-      setError(validationErrors[firstErrorKey])
+      // setError(validationErrors[firstErrorKey]) // Ya no mostramos el error general si hay inline
       return
     }
 
@@ -304,8 +307,13 @@ const LoginPage = () => {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Tu nombre"
-                    className="input input-bordered w-full focus:input-primary bg-base-100"
+                    className={`input input-bordered w-full focus:input-primary bg-base-100 ${formErrors.displayName ? 'input-error' : ''}`}
                   />
+                  {formErrors.displayName && (
+                    <label className="label">
+                      <span className="label-text-alt text-error">{formErrors.displayName}</span>
+                    </label>
+                  )}
                 </div>
               )}
 
@@ -322,8 +330,13 @@ const LoginPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
-                  className="input input-bordered w-full focus:input-primary bg-base-100"
+                  className={`input input-bordered w-full focus:input-primary bg-base-100 ${formErrors.email ? 'input-error' : ''}`}
                 />
+                {formErrors.email && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">{formErrors.email}</span>
+                  </label>
+                )}
               </div>
 
               {/* Password Input */}
@@ -340,7 +353,7 @@ const LoginPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="input input-bordered w-full focus:input-primary bg-base-100 pr-10"
+                    className={`input input-bordered w-full focus:input-primary bg-base-100 pr-10 ${formErrors.password ? 'input-error' : ''}`}
                   />
                   <button
                     type="button"
@@ -350,6 +363,11 @@ const LoginPage = () => {
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
+                {formErrors.password && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">{formErrors.password}</span>
+                  </label>
+                )}
               </div>
 
               {/* Forgot Password - Solo en modo login */}
@@ -389,6 +407,7 @@ const LoginPage = () => {
                   onClick={() => {
                     setIsRegisterMode(!isRegisterMode)
                     setError('')
+                    setFormErrors({})
                     setDisplayName('')
                   }}
                   className="text-primary hover:text-primary-focus font-semibold underline-offset-4 hover:underline transition-colors"

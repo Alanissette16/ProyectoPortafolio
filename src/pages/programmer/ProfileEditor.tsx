@@ -6,6 +6,7 @@ import { AlertTriangle, Briefcase, Camera, Clock, Github, Instagram, Linkedin, M
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { getUserProfile, updateUserProfile } from '../../services/data.service'
+import { FormUtils } from '../../utils/FormUtils'
 
 const initialForm = {
   displayName: '',
@@ -31,6 +32,7 @@ const ProfileEditor = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
   const [skills, setSkills] = useState<{ name: string, level: number }[]>([
@@ -148,6 +150,28 @@ const ProfileEditor = () => {
     setLoading(true)
     setMessage('')
     setError('')
+    setFormErrors({})
+
+    // Validaciones
+    const rules = {
+      displayName: [FormUtils.required],
+      lastName: [FormUtils.required],
+      email: [FormUtils.required, FormUtils.email],
+      specialty: [FormUtils.required],
+      bio: [(v: string) => FormUtils.minLength(v, 10)],
+      projects: [(v: string) => FormUtils.min(parseInt(v) || 0, 0)],
+      experience: [FormUtils.required],
+      clients: [(v: string) => FormUtils.min(parseInt(v) || 0, 0)],
+    }
+
+    const validationErrors = FormUtils.validateForm(form, rules)
+    setFormErrors(validationErrors)
+
+    if (FormUtils.hasErrors(validationErrors)) {
+      setLoading(false)
+      // setError('Por favor corrige los errores en el formulario.')
+      return
+    }
 
     try {
       let photoURL = user.photoURL
@@ -282,9 +306,10 @@ const ProfileEditor = () => {
               name="displayName"
               value={form.displayName}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all font-body"
+              className={`w-full px-4 py-3 rounded-xl bg-white border focus:ring-2 outline-none transition-all font-body ${formErrors.displayName ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20'}`}
               required
             />
+            {formErrors.displayName && <p className="text-red-500 text-xs mt-1">{formErrors.displayName}</p>}
           </div>
 
           {/* Apellido */}
@@ -296,9 +321,10 @@ const ProfileEditor = () => {
               name="lastName"
               value={form.lastName}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all font-body"
+              className={`w-full px-4 py-3 rounded-xl bg-white border focus:ring-2 outline-none transition-all font-body ${formErrors.lastName ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20'}`}
               required
             />
+            {formErrors.lastName && <p className="text-red-500 text-xs mt-1">{formErrors.lastName}</p>}
           </div>
         </div>
 
@@ -313,9 +339,10 @@ const ProfileEditor = () => {
               type="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all font-body"
+              className={`w-full px-4 py-3 rounded-xl bg-white border focus:ring-2 outline-none transition-all font-body ${formErrors.email ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20'}`}
               required
             />
+            {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
           </div>
 
           {/* Ubicación */}
@@ -343,9 +370,10 @@ const ProfileEditor = () => {
             name="specialty"
             value={form.specialty}
             onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-white border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all font-body"
             placeholder="Ej: Full Stack Developer"
+            className={`w-full px-4 py-3 rounded-xl bg-white border focus:ring-2 outline-none transition-all font-body ${formErrors.specialty ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20'}`}
           />
+          {formErrors.specialty && <p className="text-red-500 text-xs mt-1">{formErrors.specialty}</p>}
         </div>
 
         {/* Biografía */}
@@ -357,10 +385,10 @@ const ProfileEditor = () => {
             name="bio"
             value={form.bio}
             onChange={handleChange}
-            className="w-full px-4 py-3 rounded-xl bg-white border border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all font-body resize-none"
-            rows={4}
             placeholder="Cuéntanos sobre ti..."
+            className={`w-full px-4 py-3 rounded-xl bg-white border focus:ring-2 outline-none transition-all font-body resize-none ${formErrors.bio ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-[#D4AF37]/20 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20'}`}
           />
+          {formErrors.bio && <p className="text-red-500 text-xs mt-1">{formErrors.bio}</p>}
         </div>
 
         {/* Quote / Frase */}

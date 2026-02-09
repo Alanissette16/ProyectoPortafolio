@@ -3,10 +3,10 @@
  * SEGURO: Requiere autenticación y solo muestra las solicitudes del usuario logueado.
  */
 import { useState, FormEvent, useEffect } from 'react'
-import { addAdvisoryRequest, listProgrammers, listMyAdvisories } from '../../services/data.service'
+import { addAdvisoryRequest, listProgrammers, listMyAdvisoriesPaginated, deleteAdvisory } from '../../services/data.service'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { Download, FileText } from 'lucide-react'
+import { Download, FileText, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -37,6 +37,11 @@ const MyAdvisoryRequests = () => {
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState('')
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const pageSize = 5
+
   // Redirigir si no está autenticado
   useEffect(() => {
     if (!isAuthenticated && !loading) {
@@ -57,8 +62,9 @@ const MyAdvisoryRequests = () => {
       setError('')
 
       try {
-        const data = await listMyAdvisories()
-        setRequests(data)
+        const response = await listMyAdvisoriesPaginated(currentPage, pageSize)
+        setRequests(response.content)
+        setTotalPages(response.totalPages)
 
         // Pre-llenar el formulario con los datos del usuario
         setForm(prev => ({
@@ -77,11 +83,24 @@ const MyAdvisoryRequests = () => {
     if (isAuthenticated) {
       loadUserRequests()
     }
-  }, [user, isAuthenticated])
+  }, [user, isAuthenticated, currentPage])
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta solicitud del historial?')) {
+      return
+    }
+    try {
+      await deleteAdvisory(id)
+      setRequests(requests.filter(r => r.id !== id))
+    } catch (err) {
+      console.error('Error al eliminar:', err)
+      alert('No se pudo eliminar la solicitud.')
+    }
   }
 
   const handleSubmitNewRequest = async (e: FormEvent<HTMLFormElement>) => {
@@ -117,8 +136,9 @@ const MyAdvisoryRequests = () => {
       setShowNewRequestForm(false)
 
       // Recargar solicitudes
-      const data = await listMyAdvisories()
-      setRequests(data)
+      const response = await listMyAdvisoriesPaginated(currentPage, pageSize)
+      setRequests(response.content)
+      setTotalPages(response.totalPages)
 
     } catch (err) {
       console.error('Error al enviar solicitud:', err)
@@ -200,7 +220,7 @@ const MyAdvisoryRequests = () => {
       <div>
         <h1 className="text-3xl font-bold">Mis Solicitudes de Asesoría</h1>
         <p className="text-base-content/70">
-          Aquí puedes ver el estado de todas tus solicitudes.
+          Aquí puedes ver el estado de todas tus solicitudes (Página {currentPage + 1} de {totalPages || 1}).
         </p>
       </div>
 
@@ -379,7 +399,16 @@ const MyAdvisoryRequests = () => {
                           {request.requesterName}
                         </p>
                       </div>
-                      {getStatusBadge(request.status)}
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(request.status)}
+                        <button
+                          onClick={() => handleDelete(request.id)}
+                          className="btn btn-ghost btn-xs text-error"
+                          title="Eliminar historial"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-2">
@@ -434,8 +463,32 @@ const MyAdvisoryRequests = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+            disabled={currentPage === 0}
+            className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <span className="text-base-content/70 font-medium">
+            Página {currentPage + 1} de {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={currentPage >= totalPages - 1}
+            className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
+
 
 export default MyAdvisoryRequests

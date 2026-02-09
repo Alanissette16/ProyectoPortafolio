@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react'
 import { listProjectsByOwner, updateProject, addProject, deleteProject } from '../../services/data.service'
 import { useAuth } from '../../context/AuthContext'
 import { FiImage, FiTrash2 } from 'react-icons/fi'
+import { FormUtils } from '../../utils/FormUtils'
 
 const emptyProject = {
   title: '',
@@ -21,6 +22,7 @@ const ProjectsPage = () => {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState('')
 
@@ -78,6 +80,20 @@ const ProjectsPage = () => {
     setLoading(true)
     setMessage('')
     setError('')
+    setFormErrors({})
+
+    const rules = {
+      title: [FormUtils.required],
+      description: [FormUtils.required],
+    }
+
+    const validationErrors = FormUtils.validateForm(form, rules)
+    setFormErrors(validationErrors)
+
+    if (FormUtils.hasErrors(validationErrors)) {
+      setLoading(false)
+      return
+    }
     try {
       // Subir imagen (ahora devuelve base64) si se seleccionó nueva
       let imageUrl = form.imageUrl
@@ -181,9 +197,10 @@ const ProjectsPage = () => {
                 name="title"
                 value={form.title}
                 onChange={handleChange}
-                className="input input-bordered"
+                className={`input input-bordered ${formErrors.title ? 'input-error' : ''}`}
                 required
               />
+              {formErrors.title && <span className="text-error text-xs mt-1">{formErrors.title}</span>}
             </div>
             <div className="form-control">
               <label className="label">
@@ -193,9 +210,10 @@ const ProjectsPage = () => {
                 name="description"
                 value={form.description}
                 onChange={handleChange}
-                className="textarea textarea-bordered"
+                className={`textarea textarea-bordered ${formErrors.description ? 'textarea-error' : ''}`}
                 rows={3}
               />
+              {formErrors.description && <span className="text-error text-xs mt-1">{formErrors.description}</span>}
             </div>
             <div className="form-control">
               <label className="label">
@@ -259,9 +277,10 @@ const ProjectsPage = () => {
                   name="repoUrl"
                   value={form.repoUrl}
                   onChange={handleChange}
-                  className="input input-bordered"
+                  className={`input input-bordered ${formErrors.repoUrl ? 'input-error' : ''}`}
                   placeholder="https://github.com/..."
                 />
+                {formErrors.repoUrl && <span className="text-error text-xs mt-1">{formErrors.repoUrl}</span>}
               </div>
               <div className="form-control">
                 <label className="label">

@@ -338,14 +338,16 @@ const ProjectsAdmin = () => {
                     <div className="space-y-6">
                       <div>
                         <label className="text-xs font-bold text-[#8B7355] block mb-1">Título *</label>
-                        <input name="title" value={formData.title} onChange={handleChange} onBlur={() => handleBlur('title')} className={`w-full px-4 py-3 rounded-xl border ${touched.title && formErrors.title ? 'border-red-300' : 'border-gray-200'}`} />
+                        <input name="title" value={formData.title} onChange={handleChange} onBlur={() => handleBlur('title')} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.title && formErrors.title ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-[#D4AF37]'}`} />
+                        {touched.title && formErrors.title && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.title}</p>}
                       </div>
                       <div>
                         <label className="text-xs font-bold text-[#8B7355] block mb-1">Programadores *</label>
-                        <select onChange={(e) => onAddProgrammer(e.target.value)} value="" className="w-full px-4 py-3 rounded-xl border border-gray-200 mb-2">
+                        <select onChange={(e) => onAddProgrammer(e.target.value)} value="" className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all mb-2 ${formErrors.programadorId ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'}`}>
                           <option value="" disabled>Seleccionar...</option>
                           {programmers.map(p => <option key={p.id} value={p.id}>{p.displayName} {p.lastName}</option>)}
                         </select>
+                        {formErrors.programadorId && <p className="text-red-500 text-[10px] mb-2 ml-1">{formErrors.programadorId}</p>}
                         <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded-xl">
                           {selectedProgrammerIds.map(id => {
                             const p = programmers.find(x => x.id.toString() === id.toString())
@@ -360,7 +362,8 @@ const ProjectsAdmin = () => {
                       </div>
                       <div>
                         <label className="text-xs font-bold text-[#8B7355] block mb-1">Descripción *</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange} onBlur={() => handleBlur('description')} rows={3} className={`w-full px-4 py-3 rounded-xl border ${touched.description && formErrors.description ? 'border-red-300' : 'border-gray-200'}`} />
+                        <textarea name="description" value={formData.description} onChange={handleChange} onBlur={() => handleBlur('description')} rows={3} className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all resize-none ${touched.description && formErrors.description ? 'border-red-300 focus:border-red-400' : 'border-gray-200 focus:border-[#D4AF37]'}`} />
+                        {touched.description && formErrors.description && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.description}</p>}
                       </div>
                     </div>
                     <div className="space-y-6">
@@ -378,11 +381,12 @@ const ProjectsAdmin = () => {
                             value={newTechnology}
                             onChange={(e) => setNewTechnology(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), onAddTechnology())}
-                            className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-sm"
+                            className={`flex-1 px-4 py-2 rounded-xl border focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all text-sm ${formErrors.technologies ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'}`}
                             placeholder="React, Node..."
                           />
                           <button type="button" onClick={onAddTechnology} className="px-4 bg-[#D4AF37] text-white rounded-xl"><FiPlus /></button>
                         </div>
+                        {formErrors.technologies && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.technologies}</p>}
                         <div className="flex flex-wrap gap-1 mt-2">
                           {technologies.map((t, i) => (
                             <span key={i} className="text-[10px] bg-blue-50 text-blue-700 px-3 py-1 rounded-lg border border-blue-100 flex items-center gap-1 font-bold">
@@ -395,8 +399,10 @@ const ProjectsAdmin = () => {
 
                       <div>
                         <label className="text-xs font-bold text-[#8B7355] block mb-1">URLs</label>
-                        <input name="githubUrl" value={formData.githubUrl} onChange={handleChange} placeholder="GitHub" className="w-full px-4 py-2 rounded-xl border border-gray-200 mb-2 text-sm" />
-                        <input name="demoUrl" value={formData.demoUrl} onChange={handleChange} placeholder="Demo" className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm" />
+                        <input name="githubUrl" value={formData.githubUrl} onChange={handleChange} onBlur={() => handleBlur('githubUrl')} placeholder="GitHub" className={`w-full px-4 py-2 rounded-xl border mb-2 text-sm focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.githubUrl && formErrors.githubUrl ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'}`} />
+                        {touched.githubUrl && formErrors.githubUrl && <p className="text-red-500 text-[10px] mb-2 ml-1">{formErrors.githubUrl}</p>}
+                        <input name="demoUrl" value={formData.demoUrl} onChange={handleChange} onBlur={() => handleBlur('demoUrl')} placeholder="Demo" className={`w-full px-4 py-2 rounded-xl border text-sm focus:ring-2 focus:ring-[#D4AF37]/20 outline-none transition-all ${touched.demoUrl && formErrors.demoUrl ? 'border-red-300' : 'border-gray-200 focus:border-[#D4AF37]'}`} />
+                        {touched.demoUrl && formErrors.demoUrl && <p className="text-red-500 text-[10px] mt-1 ml-1">{formErrors.demoUrl}</p>}
                       </div>
                     </div>
                   </div>

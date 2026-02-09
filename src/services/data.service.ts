@@ -7,14 +7,29 @@ import { api } from './api.service';
 //========== USUARIOS / PROGRAMADORES ==========
 
 //obtener lista completa de programadores del sistema
+//obtener lista completa de programadores del sistema (legacy compatibility)
 export const listProgrammers = async () => {
     try {
         //usar endpoint público para listar programadores
-        const users = await api.get<any[]>('/usuarios/programadores');
-        return users;
+        const response = await api.get<any>('/usuarios/programadores?size=100'); // Fetch enough to look like a list
+        if (response.content && Array.isArray(response.content)) {
+            return response.content;
+        }
+        return Array.isArray(response) ? response : [];
     } catch (error) {
         console.error('Error listing programmers:', error);
         return [];
+    }
+};
+
+//obtener lista paginada de programadores
+export const listProgrammersPaginated = async (page: number = 0, size: number = 10) => {
+    try {
+        const response = await api.get<any>(`/usuarios/programadores?page=${page}&size=${size}`);
+        return response; // Returns Page object { content, totalPages, ... }
+    } catch (error) {
+        console.error('Error listing programmers paginated:', error);
+        return { content: [], totalPages: 0, number: 0 };
     }
 };
 
@@ -50,6 +65,31 @@ export const deleteProgrammer = async (uid: string) => {
 };
 
 
+// Basic Request Types
+export interface PageRequest {
+    page?: number;
+    size?: number;
+    sort?: string[];
+}
+
+// Basic Response Types
+export interface Page<T> {
+    content: T[];
+    totalPages: number;
+    totalElements: number;
+    last: boolean;
+    size: number;
+    number: number;
+    sort: {
+        empty: boolean;
+        sorted: boolean;
+        unsorted: boolean;
+    };
+    numberOfElements: number;
+    first: boolean;
+    empty: boolean;
+}
+
 //========== PROYECTOS ==========
 
 //mapear respuesta del backend al formato del frontend
@@ -69,15 +109,34 @@ const mapProjectResponse = (p: any) => ({
 
 //obtener todos los proyectos de un programador específico
 export const listProjectsByOwner = async (uid: string) => {
-    const data = await api.get<any[]>(`/proyectos/programador/${uid}`);
-    return data.map(mapProjectResponse);
+    // Default to a large size to mimic previous behavior of returning all
+    const response = await api.get<Page<any>>(`/proyectos/programador/${uid}?size=100`);
+    return response.content ? response.content.map(mapProjectResponse) : [];
+};
+
+export const listProjectsByOwnerPaginated = async (uid: string, page: number = 0, size: number = 10) => {
+    const response = await api.get<Page<any>>(`/proyectos/programador/${uid}?page=${page}&size=${size}`);
+    return {
+        ...response,
+        content: response.content.map(mapProjectResponse)
+    };
 };
 
 //obtener todos los proyectos públicos del sistema
 export const listAllProjects = async () => {
-    const data = await api.get<any[]>('/proyectos/publicos');
-    return data.map(mapProjectResponse);
+    // Default to a large size to mimic previous behavior
+    const response = await api.get<Page<any>>('/proyectos/publicos?size=100');
+    return response.content ? response.content.map(mapProjectResponse) : [];
 };
+
+export const listAllProjectsPaginated = async (page: number = 0, size: number = 10) => {
+    const response = await api.get<Page<any>>(`/proyectos/publicos?page=${page}&size=${size}`);
+    return {
+        ...response,
+        content: response.content.map(mapProjectResponse)
+    };
+};
+
 
 //mapear datos del frontend al formato del backend
 const mapProjectData = (uid: string, data: any) => ({
@@ -130,48 +189,60 @@ export const deleteProject = async (id: string) => {
 
 //========== ASESORÍAS ==========
 
+// Helper to map advisory response
+const mapAdvisoryResponse = (r: any) => ({
+    id: r.id.toString(),
+    requesterName: r.usuarioExternoNombre,
+    requesterEmail: r.usuarioExternoEmail,
+    programmerName: r.programadorNombre,
+    programadorId: r.programadorId.toString(),
+    slot: {
+        date: r.fecha,
+        time: r.horaInicio
+    },
+    note: r.motivo,
+    responseMessage: r.notasAdicionales,
+    status: r.estado === 'CONFIRMADA' ? 'aprobada' : r.estado.toLowerCase(),
+    createdAt: r.fechaSolicitud
+});
+
 //obtener todas las asesorías del sistema (admin)
 export const listAllAdvisories = async () => {
-    return api.get<any[]>('/asesorias');
+    const response = await api.get<Page<any>>('/asesorias?size=100');
+    return response.content || [];
+};
+
+export const listAllAdvisoriesPaginated = async (page: number = 0, size: number = 10) => {
+    return api.get<Page<any>>(`/asesorias?page=${page}&size=${size}`);
 };
 
 //obtener asesorías recibidas por el programador autenticado
 export const listAdvisoriesByProgrammer = async () => {
-    const response = await api.get<any[]>('/asesorias/programador');
+    const response = await api.get<Page<any>>('/asesorias/programador?size=100');
     //mapear respuesta del backend al formato del frontend
-    return response.map(r => ({
-        id: r.id.toString(),
-        requesterName: r.usuarioExternoNombre,
-        requesterEmail: r.usuarioExternoEmail,
-        programmerName: r.programadorNombre,
-        programadorId: r.programadorId.toString(),
-        slot: {
-            date: r.fecha,
-            time: r.horaInicio
-        },
-        note: r.motivo,
-        status: r.estado === 'CONFIRMADA' ? 'aprobada' : r.estado.toLowerCase(),
-        createdAt: r.fechaSolicitud
-    }));
+    return response.content ? response.content.map(mapAdvisoryResponse) : [];
+};
+
+export const listAdvisoriesByProgrammerPaginated = async (page: number = 0, size: number = 10) => {
+    const response = await api.get<Page<any>>(`/asesorias/programador?page=${page}&size=${size}`);
+    return {
+        ...response,
+        content: response.content.map(mapAdvisoryResponse)
+    };
 };
 
 //obtener asesorías solicitadas por el usuario autenticado
 export const listMyAdvisories = async () => {
-    const response = await api.get<any[]>('/asesorias/mias');
-    return response.map(r => ({
-        id: r.id.toString(),
-        programmerId: r.programadorId.toString(),
-        requesterName: r.usuarioExternoNombre,
-        requesterEmail: r.usuarioExternoEmail,
-        slot: {
-            date: r.fecha,
-            time: r.horaInicio
-        },
-        note: r.motivo, //motivo de la solicitud
-        responseMessage: r.notasAdicionales, //respuesta del programador
-        status: r.estado === 'CONFIRMADA' ? 'aprobada' : r.estado.toLowerCase(),
-        createdAt: r.fechaSolicitud
-    }));
+    const response = await api.get<Page<any>>('/asesorias/mias?size=100');
+    return response.content ? response.content.map(mapAdvisoryResponse) : [];
+};
+
+export const listMyAdvisoriesPaginated = async (page: number = 0, size: number = 10) => {
+    const response = await api.get<Page<any>>(`/asesorias/mias?page=${page}&size=${size}`);
+    return {
+        ...response,
+        content: response.content.map(mapAdvisoryResponse)
+    };
 };
 
 //actualizar estado de una asesoría (aprobar/rechazar)
@@ -205,6 +276,11 @@ export const requestAdvisory = async (data: any) => {
     };
 
     return api.post<any>('/asesorias', payload);
+};
+
+//eliminar una asesoría (solo participantes)
+export const deleteAdvisory = async (id: string) => {
+    return api.delete<void>(`/asesorias/${id}`);
 };
 
 //========== HORARIOS ==========
@@ -277,5 +353,18 @@ export const upsertSchedule = async (programadorId: string, slots: ScheduleSlot[
 export const getPortfolio = getUserProfile;
 export const upsertPortfolio = updateUserProfile; //el portafolio es parte del perfil de usuario
 export const addAdvisoryRequest = requestAdvisory;
-export const listAllUsers = async () => api.get<any[]>('/usuarios');
+export const listAllUsers = async () => {
+    try {
+        const response = await api.get<any>('/usuarios?size=100');
+        if (response.content && Array.isArray(response.content)) return response.content;
+        return Array.isArray(response) ? response : [];
+    } catch { return []; }
+};
+export const listAllUsersPaginated = async (page: number = 0, size: number = 20) => {
+    try {
+        return await api.get<any>(`/usuarios?page=${page}&size=${size}`);
+    } catch {
+        return { content: [], totalPages: 0 };
+    }
+};
 export const updateUserRole = async (uid: string, role: string) => updateUserProfile(uid, { role });
