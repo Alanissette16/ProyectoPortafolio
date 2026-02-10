@@ -126,14 +126,17 @@ VITE_API_URL=http://localhost:8080/api
 ### 3. Configurar Backend
 
 ```bash
+```bash
 cd ../Backend-Portafolio
 
-# Configurar base de datos en src/main/resources/application.yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/portafolio_db
-    username: tu_usuario
-    password: tu_contraseña
+# Opción A: Ejecutar con configuración por defecto (Local)
+./gradlew bootRun
+
+# Opción B: Configurar variables de entorno (Producción/Custom)
+# Ver README del backend para lista completa de variables (DB_URL, JWT_SECRET, etc)
+export DB_URL=jdbc:postgresql://localhost:5432/portafolio_db
+export DB_USERNAME=tu_usuario
+export DB_PASSWORD=tu_contraseña
 ```
 
 ### 4. Ejecutar el Proyecto

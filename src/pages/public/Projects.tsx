@@ -6,6 +6,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   ExternalLink,
   Eye,
@@ -18,7 +20,7 @@ import {
   Star,
   X
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { listAllProjects } from '../../services/data.service'
 import SEOHead from '../../components/common/SEOHead'
 
@@ -44,6 +46,8 @@ const categories = ['Todos', 'E-commerce', 'Mobile App', 'Web Design', 'Branding
 // Colores para asignar a proyectos del Backend
 const projectColors = ['pink', 'purple', 'rose', 'amber', 'emerald', 'cyan']
 
+const ITEMS_PER_PAGE = 9
+
 // Proyectos de ejemplo (siempre se muestran)
 // Proyectos de ejemplo eliminados para usar solo backend
 const exampleProjects: ProjectType[] = []
@@ -55,6 +59,10 @@ const Projects = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProject, setSelectedProject] = useState<ProjectType | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const projectsRef = useRef<HTMLDivElement>(null)
 
   // Cargar proyectos del Backend y combinar con los de ejemplo
   useEffect(() => {
@@ -121,7 +129,23 @@ const Projects = () => {
     }
 
     setFilteredProjects(filtered)
+    setCurrentPage(1) // Reset to first page on filter change
   }, [activeCategory, searchTerm, projects])
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE)
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  )
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    // Scroll to top of grid
+    if (projectsRef.current) {
+      projectsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   const colorClasses: Record<string, { gradient: string, bg: string, text: string }> = {
     pink: { gradient: 'from-primary to-accent', bg: 'bg-primary/5', text: 'text-primary' },
@@ -183,6 +207,7 @@ const Projects = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="mb-12"
+          ref={projectsRef}
         >
           <div className="relative max-w-md mx-auto mb-8">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={20} />
@@ -220,117 +245,122 @@ const Projects = () => {
           </div>
         )}
 
-        {/* Projects Grid */}
+        {/* Projects Grid with Slide Animation */}
         {!loading && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatePresence mode="popLayout">
-              {filteredProjects.map((project, index) => {
-                const colors = colorClasses[project.color] || colorClasses.pink
+          <div className="min-h-[600px] relative overflow-hidden">
+            <AnimatePresence mode="popLayout" initial={false} custom={currentPage}>
+              <motion.div
+                key={currentPage}
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -300, opacity: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {paginatedProjects.map((project, index) => {
+                  const colors = colorClasses[project.color] || colorClasses.pink
 
-                return (
-                  <motion.div
-                    key={project.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="group"
-                  >
-                    <div className="relative bg-base-100 rounded-3xl overflow-hidden shadow-xl shadow-base-content/5 border border-base-content/10 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
-                      {/* Featured Badge */}
-                      {project.featured && (
-                        <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-lg bg-gradient-to-r from-primary to-secondary">
-                          <Star size={12} className="fill-current" />
-                          Destacado
+                  return (
+                    <motion.div
+                      key={project.id}
+                      layout
+                      className="group"
+                    >
+                      <div className="relative bg-base-100 rounded-3xl overflow-hidden shadow-xl shadow-base-content/5 border border-base-content/10 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 h-full flex flex-col">
+                        {/* Featured Badge */}
+                        {project.featured && (
+                          <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold shadow-lg bg-gradient-to-r from-primary to-secondary">
+                            <Star size={12} className="fill-current" />
+                            Destacado
+                          </div>
+                        )}
+
+                        {/* Image */}
+                        <div className="relative h-56 overflow-hidden flex-shrink-0">
+                          <img
+                            src={project.image}
+                            alt={project.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-base-content/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                          {/* Hover Actions */}
+                          <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => setSelectedProject(project)}
+                              className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-primary hover:bg-base-100 transition-colors shadow-lg"
+                            >
+                              <Eye size={20} />
+                            </button>
+                            {project.liveUrl && project.liveUrl !== '#' && (
+                              <a
+                                href={project.liveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-secondary hover:bg-base-100 transition-colors shadow-lg"
+                              >
+                                <ExternalLink size={20} />
+                              </a>
+                            )}
+                            {project.githubUrl && project.githubUrl !== '#' && (
+                              <a
+                                href={project.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-base-content/70 hover:bg-base-100 transition-colors shadow-lg"
+                              >
+                                <Github size={20} />
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      )}
 
-                      {/* Image */}
-                      <div className="relative h-56 overflow-hidden">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-base-content/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {/* Content */}
+                        <div className="p-6 flex flex-col flex-grow">
+                          {/* Category */}
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} font-body`}>
+                              {project.category}
+                            </span>
+                            <span className="text-xs text-base-content/40 font-body">{project.year}</span>
+                          </div>
 
-                        {/* Hover Actions */}
-                        <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                          {/* Title */}
+                          <h3 className="text-xl font-display font-bold text-base-content mb-2 group-hover:text-primary transition-colors">
+                            {project.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-base-content/60 font-body text-sm mb-4 line-clamp-2 flex-grow">
+                            {project.description}
+                          </p>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {project.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2 py-1 rounded-lg text-xs text-base-content/60 font-body" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* View More */}
                           <button
                             onClick={() => setSelectedProject(project)}
-                            className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-primary hover:bg-base-100 transition-colors shadow-lg"
+                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r ${colors.gradient} text-white font-semibold hover:opacity-90 transition-opacity font-body mt-auto`}
                           >
-                            <Eye size={20} />
+                            Ver Detalles
+                            <ArrowUpRight size={18} />
                           </button>
-                          {project.liveUrl && project.liveUrl !== '#' && (
-                            <a
-                              href={project.liveUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-secondary hover:bg-base-100 transition-colors shadow-lg"
-                            >
-                              <ExternalLink size={20} />
-                            </a>
-                          )}
-                          {project.githubUrl && project.githubUrl !== '#' && (
-                            <a
-                              href={project.githubUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-3 rounded-xl bg-base-100/90 backdrop-blur-sm text-base-content/70 hover:bg-base-100 transition-colors shadow-lg"
-                            >
-                              <Github size={20} />
-                            </a>
-                          )}
                         </div>
                       </div>
-
-                      {/* Content */}
-                      <div className="p-6">
-                        {/* Category */}
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.bg} ${colors.text} font-body`}>
-                            {project.category}
-                          </span>
-                          <span className="text-xs text-base-content/40 font-body">{project.year}</span>
-                        </div>
-
-                        {/* Title */}
-                        <h3 className="text-xl font-display font-bold text-base-content mb-2 group-hover:text-primary transition-colors">
-                          {project.title}
-                        </h3>
-
-                        {/* Description */}
-                        <p className="text-base-content/60 font-body text-sm mb-4 line-clamp-2">
-                          {project.description}
-                        </p>
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-2 py-1 rounded-lg text-xs text-base-content/60 font-body" style={{ background: 'linear-gradient(to right, #FFF8E7, #FFF0D4)' }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* View More */}
-                        <button
-                          onClick={() => setSelectedProject(project)}
-                          className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-gradient-to-r ${colors.gradient} text-white font-semibold hover:opacity-90 transition-opacity font-body`}
-                        >
-                          Ver Detalles
-                          <ArrowUpRight size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
             </AnimatePresence>
           </div>
         )}
@@ -353,6 +383,29 @@ const Projects = () => {
               Ver todos los proyectos
             </button>
           </motion.div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && filteredProjects.length > 0 && (
+          <div className="flex justify-center items-center gap-4 mt-12">
+            <button
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <span className="text-base-content/70 font-medium font-body">
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="btn btn-circle btn-outline border-primary/20 hover:bg-primary hover:border-primary disabled:opacity-30 disabled:hover:bg-transparent"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -477,5 +530,4 @@ const Projects = () => {
     </div>
   )
 }
-
 export default Projects

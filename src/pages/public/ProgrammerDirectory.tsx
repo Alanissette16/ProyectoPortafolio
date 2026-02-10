@@ -3,7 +3,7 @@
  * Diseño elegante con tarjetas modernas y efectos suaves
  */
 
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowRight,
   Code2,
@@ -79,7 +79,7 @@ const ProgrammerDirectory = () => {
   useEffect(() => {
     const loadProgrammers = async () => {
       try {
-        const response: any = await listProgrammersPaginated(currentPage, 6) // Asume 6 por página
+        const response: any = await listProgrammersPaginated(currentPage, 9) // Asume 9 por página
         const programmers = response.content || []
         setTotalPages(response.totalPages || 0)
 
@@ -248,180 +248,188 @@ const ProgrammerDirectory = () => {
         </div>
 
         {/* Team Grid */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {team.map((member, index) => (
-            <motion.div
-              key={member.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 + 0.3 }}
-              className="group"
-            >
-              <div className={`relative bg-base-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/5 border border-base-content/10 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500`}>
-                {/* Decoración superior */}
-                <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${member.gradient}`} />
+        <AnimatePresence mode="popLayout" custom={currentPage}>
+          <motion.div
+            key={currentPage}
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="grid lg:grid-cols-2 gap-8 lg:gap-12"
+          >
+            {team.map((member, index) => (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }} // Reduced delay for smoother transition
+                className="group"
+              >
+                <div className={`relative bg-base-100 rounded-[2.5rem] overflow-hidden shadow-xl shadow-primary/5 border border-base-content/10 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500`}>
+                  {/* Decoración superior */}
+                  <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${member.gradient}`} />
 
-                {/* Contenido principal */}
-                <div className="p-8">
-                  {/* Header con foto y info básica */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
-                    {/* Foto */}
-                    <div className="relative">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity`} />
-                      <div className={`relative w-36 h-36 rounded-3xl overflow-hidden border-4 border-base-100 shadow-xl group-hover:scale-105 transition-transform duration-500`}>
-                        <img
-                          src={member.image}
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {/* Badge de rol */}
-                      <div className={`absolute -bottom-2 -right-2 p-2.5 rounded-xl bg-gradient-to-r ${member.gradient} shadow-lg`}>
-                        <member.roleIcon className="text-white" size={18} />
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="text-center sm:text-left flex-1">
-                      <h2 className="text-3xl font-display font-bold text-base-content mb-1">
-                        {member.name} <span className="text-base-content/40">{member.lastName}</span>
-                      </h2>
-                      <p className={`text-lg font-medium bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent font-body flex items-center gap-2 justify-center sm:justify-start`}>
-                        <Flower2 size={16} className={`text-${member.accentColor}-400`} />
-                        {member.role}
-                      </p>
-
-                      {/* Ubicación y email */}
-                      <div className="mt-3 space-y-1">
-                        <p className="text-sm text-base-content/50 font-body flex items-center gap-2 justify-center sm:justify-start">
-                          <MapPin size={14} className={`text-${member.accentColor}-400`} />
-                          {member.location}
-                        </p>
-                        <a href={`mailto:${member.email}`} className={`text-sm text-base-content/50 hover:text-primary font-body flex items-center gap-2 justify-center sm:justify-start transition-colors`}>
-                          <Mail size={14} className={`text-${member.accentColor}-400`} />
-                          {member.email}
-                        </a>
-                      </div>
-
-                      {/* Social Links */}
-                      <div className="flex items-center gap-2 mt-4 justify-center sm:justify-start">
-                        {member.social.instagram && (
-                          <a href={member.social.instagram} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
-                            <Instagram size={18} />
-                          </a>
-                        )}
-                        {member.social.linkedin && (
-                          <a href={member.social.linkedin} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
-                            <Linkedin size={18} />
-                          </a>
-                        )}
-                        {member.social.github && (
-                          <a href={member.social.github} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
-                            <Github size={18} />
-                          </a>
-                        )}
-                        {member.social.whatsapp && (
-                          <a href={member.social.whatsapp} target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
-                            <Phone size={18} />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quote */}
-                  <div className={`relative p-5 rounded-2xl bg-base-200/50 mb-6 border border-base-content/5`}>
-                    <Quote className={`absolute top-3 left-3 text-primary/20`} size={24} />
-                    <p className="text-center font-script text-xl text-base-content/80 italic pl-6">
-                      {member.quote}
-                    </p>
-                  </div>
-
-                  {/* Bio */}
-                  <p className="text-base-content/60 font-body leading-relaxed mb-6">
-                    {member.bio}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
-                      <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
-                        {member.stats.projects}+
-                      </p>
-                      <p className="text-xs text-base-content/50 font-body">Proyectos</p>
-                    </div>
-                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
-                      <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
-                        {member.stats.experience}
-                      </p>
-                      <p className="text-xs text-base-content/50 font-body">Experiencia</p>
-                    </div>
-                    <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
-                      <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
-                        {member.stats.clients}+
-                      </p>
-                      <p className="text-xs text-base-content/50 font-body">Clientes</p>
-                    </div>
-                  </div>
-
-                  {/* Skills */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-semibold text-base-content/70 font-body flex items-center gap-2">
-                      <Sparkles size={14} className={`text-${member.accentColor}-400`} />
-                      Habilidades
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {member.skills.map((skill) => (
-                        <div key={skill.name} className="space-y-1">
-                          <div className="flex justify-between text-xs font-body">
-                            <span className="text-base-content/70">{skill.name}</span>
-                            <span className={`text-${member.accentColor}-500`}>{skill.level}%</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-base-200 overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${skill.level}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 1, delay: 0.2 }}
-                              className={`h-full rounded-full bg-gradient-to-r ${member.gradient}`}
-                            />
-                          </div>
+                  {/* Contenido principal */}
+                  <div className="p-8">
+                    {/* Header con foto y info básica */}
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
+                      {/* Foto */}
+                      <div className="relative">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity`} />
+                        <div className={`relative w-36 h-36 rounded-3xl overflow-hidden border-4 border-base-100 shadow-xl group-hover:scale-105 transition-transform duration-500`}>
+                          <img
+                            src={member.image}
+                            alt={member.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        {/* Badge de rol */}
+                        <div className={`absolute -bottom-2 -right-2 p-2.5 rounded-xl bg-gradient-to-r ${member.gradient} shadow-lg`}>
+                          <member.roleIcon className="text-white" size={18} />
+                        </div>
+                      </div>
 
-                  {/* CTA - Solo visible para el programador dueño de la tarjeta */}
-                  {user?.uid === member.id && (
-                    <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                      <Link
-                        to={`/portafolio/${member.id}`}
-                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${member.gradient} text-white font-semibold hover:opacity-90 transition-all shadow-lg font-body`}
+                      {/* Info */}
+                      <div className="text-center sm:text-left flex-1">
+                        <h2 className="text-3xl font-display font-bold text-base-content mb-1">
+                          {member.name} <span className="text-base-content/40">{member.lastName}</span>
+                        </h2>
+                        <p className={`text-lg font-medium bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent font-body flex items-center gap-2 justify-center sm:justify-start`}>
+                          <Flower2 size={16} className={`text-${member.accentColor}-400`} />
+                          {member.role}
+                        </p>
+
+                        {/* Ubicación y email */}
+                        <div className="mt-3 space-y-1">
+                          <p className="text-sm text-base-content/50 font-body flex items-center gap-2 justify-center sm:justify-start">
+                            <MapPin size={14} className={`text-${member.accentColor}-400`} />
+                            {member.location}
+                          </p>
+                          <a href={`mailto:${member.email}`} className={`text-sm text-base-content/50 hover:text-primary font-body flex items-center gap-2 justify-center sm:justify-start transition-colors`}>
+                            <Mail size={14} className={`text-${member.accentColor}-400`} />
+                            {member.email}
+                          </a>
+                        </div>
+
+                        {/* Social Links */}
+                        <div className="flex items-center gap-2 mt-4 justify-center sm:justify-start">
+                          {member.social.instagram && (
+                            <a href={member.social.instagram} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
+                              <Instagram size={18} />
+                            </a>
+                          )}
+                          {member.social.linkedin && (
+                            <a href={member.social.linkedin} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
+                              <Linkedin size={18} />
+                            </a>
+                          )}
+                          {member.social.github && (
+                            <a href={member.social.github} className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
+                              <Github size={18} />
+                            </a>
+                          )}
+                          {member.social.whatsapp && (
+                            <a href={member.social.whatsapp} target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl bg-base-200 hover:bg-gradient-to-r hover:${member.gradient} text-base-content/70 hover:text-white transition-all group/social`}>
+                              <Phone size={18} />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quote */}
+                    <div className={`relative p-5 rounded-2xl bg-base-200/50 mb-6 border border-base-content/5`}>
+                      <Quote className={`absolute top-3 left-3 text-primary/20`} size={24} />
+                      <p className="text-center font-script text-xl text-base-content/80 italic pl-6">
+                        {member.quote}
+                      </p>
+                    </div>
+
+                    {/* Bio */}
+                    <p className="text-base-content/60 font-body leading-relaxed mb-6">
+                      {member.bio}
+                    </p>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-4 mb-6">
+                      <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
+                        <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
+                          {member.stats.projects}+
+                        </p>
+                        <p className="text-xs text-base-content/50 font-body">Proyectos</p>
+                      </div>
+                      <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
+                        <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
+                          {member.stats.experience}
+                        </p>
+                        <p className="text-xs text-base-content/50 font-body">Experiencia</p>
+                      </div>
+                      <div className={`text-center p-4 rounded-2xl bg-base-200/50 border border-base-content/5`}>
+                        <p className={`text-2xl font-display font-bold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent`}>
+                          {member.stats.clients}+
+                        </p>
+                        <p className="text-xs text-base-content/50 font-body">Clientes</p>
+                      </div>
+                    </div>
+
+                    {/* Skills */}
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-base-content/70 font-body flex items-center gap-2">
+                        <Sparkles size={14} className={`text-${member.accentColor}-400`} />
+                        Habilidades
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {member.skills.map((skill) => (
+                          <div key={skill.name} className="space-y-1">
+                            <div className="flex justify-between text-xs font-body">
+                              <span className="text-base-content/70">{skill.name}</span>
+                              <span className={`text-${member.accentColor}-500`}>{skill.level}%</span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-base-200 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${skill.level}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1, delay: 0.2 }}
+                                className={`h-full rounded-full bg-gradient-to-r ${member.gradient}`}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* CTA - Solo visible para el programador dueño de la tarjeta */}
+                    {user?.uid === member.id && (
+                      <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                        <Link
+                          to={`/portafolio/${member.id}`}
+                          className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r ${member.gradient} text-white font-semibold hover:opacity-90 transition-all shadow-lg font-body`}
+                        >
+                          <Sparkles size={18} />
+                          Ver Mi Portafolio
+                          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Botón para ver horario */}
+                    <div className="mt-4">
+                      <button
+                        onClick={() => openScheduleModal(member)}
+                        className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-base-100 border border-primary/20 text-primary hover:bg-gradient-to-r hover:${member.gradient} hover:text-white transition-all shadow-lg font-body font-semibold`}
                       >
-                        <Sparkles size={18} />
-                        Ver Mi Portafolio
-                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                      </Link>
+                        <Heart size={18} />
+                        Ver Horario Disponible
+                      </button>
                     </div>
-                  )}
-
-                  {/* Botón para ver horario */}
-                  <div className="mt-4">
-                    <button
-                      onClick={() => openScheduleModal(member)}
-                      className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-base-100 border border-primary/20 text-primary hover:bg-gradient-to-r hover:${member.gradient} hover:text-white transition-all shadow-lg font-body font-semibold`}
-                    >
-                      <Heart size={18} />
-                      Ver Horario Disponible
-                    </button>
                   </div>
+
                 </div>
-
-
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
@@ -484,68 +492,70 @@ const ProgrammerDirectory = () => {
       </div>
 
       {/* Modal de Horario */}
-      {scheduleModal.open && scheduleModal.member && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[2rem] max-w-md w-full max-h-[80vh] overflow-hidden shadow-2xl"
-          >
-            <div className={`p-6 bg-gradient-to-r ${scheduleModal.member.gradient}`}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-display font-bold text-white">
-                  Horario de {scheduleModal.member.name}
-                </h3>
-                <button
-                  onClick={closeScheduleModal}
-                  className="text-white hover:text-white/80 transition-colors"
-                >
-                  ✕
-                </button>
+      {
+        scheduleModal.open && scheduleModal.member && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-[2rem] max-w-md w-full max-h-[80vh] overflow-hidden shadow-2xl"
+            >
+              <div className={`p-6 bg-gradient-to-r ${scheduleModal.member?.gradient}`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-display font-bold text-white">
+                    Horario de {scheduleModal.member?.name}
+                  </h3>
+                  <button
+                    onClick={closeScheduleModal}
+                    className="text-white hover:text-white/80 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="p-6 max-h-96 overflow-y-auto">
-              {scheduleModal.schedule.length > 0 ? (
-                <div className="space-y-3">
-                  {scheduleModal.schedule.map((slot: any, index: number) => (
-                    <div
-                      key={index}
-                      className={`p-4 rounded-xl border ${slot.available
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-gray-50 border-gray-200'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-base-content">{getDateForDay(slot.day)}</p>
-                          <p className="text-sm text-base-content/70">
-                            {slot.from} - {slot.to}
-                          </p>
-                        </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${slot.available
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                          }`}>
-                          {slot.available ? 'Disponible' : 'No disponible'}
+              <div className="p-6 max-h-96 overflow-y-auto">
+                {scheduleModal.schedule.length > 0 ? (
+                  <div className="space-y-3">
+                    {scheduleModal.schedule.map((slot: any, index: number) => (
+                      <div
+                        key={index}
+                        className={`p-4 rounded-xl border ${slot.available
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-gray-50 border-gray-200'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-base-content">{getDateForDay(slot.day)}</p>
+                            <p className="text-sm text-base-content/70">
+                              {slot.from} - {slot.to}
+                            </p>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-xs font-semibold ${slot.available
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}>
+                            {slot.available ? 'Disponible' : 'No disponible'}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Heart className="mx-auto text-gray-400 mb-4" size={48} />
-                  <p className="text-base-content/60">
-                    No hay horarios configurados aún.
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Heart className="mx-auto text-gray-400 mb-4" size={48} />
+                    <p className="text-base-content/60">
+                      No hay horarios configurados aún.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )
+      }
+    </div >
   )
 }
 
